@@ -1,0 +1,10 @@
+sample:
+  description: Hello World sample
+  name: hello world
+tests:
+  sample.helloworld:
+    sysbuild: true
+    build_only: true
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151
+      - nrf9151_connectkit/nrf9151/ns

@@ -1,0 +1,9 @@
+sample:
+  name: ADC devicetree driver sample
+tests:
+  sample.adc:
+    sysbuild: true
+    build_only: true
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151
+      - nrf9151_connectkit/nrf9151/ns

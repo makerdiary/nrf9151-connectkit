@@ -1,0 +1,8 @@
+sample:
+  name: Modem battery sample
+tests:
+  sample.modem_battery:
+    sysbuild: true
+    build_only: true
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns

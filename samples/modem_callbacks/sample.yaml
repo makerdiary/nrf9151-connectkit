@@ -1,0 +1,8 @@
+sample:
+  name: Modem callbacks sample
+tests:
+  sample.modem_callbacks:
+    sysbuild: true
+    build_only: true
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
