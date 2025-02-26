@@ -1,0 +1,12 @@
+#
+# Copyright (c) 2020 Nordic Semiconductor ASA
+# Copyright (c) 2016-2025 Makerdiary <https://makerdiary.com>
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+# Do not use partition manager
+config PARTITION_MANAGER
+	default n
+
+source "${ZEPHYR_BASE}/share/sysbuild/Kconfig"

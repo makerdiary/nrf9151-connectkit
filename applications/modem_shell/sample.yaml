@@ -1,0 +1,128 @@
+sample:
+  name: Modem Shell
+tests:
+  applications.modem_shell:
+    sysbuild: true
+    build_only: true
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
+  applications.modem_shell_debug:
+    sysbuild: true
+    build_only: true
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
+    extra_args: EXTRA_CONF_FILE=overlay-debug.conf
+  applications.modem_shell.cloud_mqtt_only:
+    sysbuild: true
+    build_only: true
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
+    extra_configs:
+      - CONFIG_LOCATION_SERVICE_NRF_CLOUD_GNSS_POS_SEND=y
+    extra_args: EXTRA_CONF_FILE=overlay-cloud_mqtt.conf
+  applications.modem_shell.cloud_mqtt_rest:
+    sysbuild: true
+    build_only: true
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
+    extra_configs:
+      - CONFIG_MOSH_CLOUD_MQTT=y
+      - CONFIG_MOSH_CLOUD_REST=y
+  applications.modem_shell.cloud_coap_only:
+    sysbuild: true
+    build_only: true
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
+    extra_configs:
+      - CONFIG_LOCATION_SERVICE_NRF_CLOUD_GNSS_POS_SEND=y
+    extra_args: EXTRA_CONF_FILE=overlay-cloud_coap.conf
+  applications.modem_shell.non_offloading_ip:
+    sysbuild: true
+    build_only: true
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
+    extra_args: EXTRA_CONF_FILE=overlay-non-offloading.conf
+  applications.modem_shell.app_fota:
+    sysbuild: true
+    build_only: true
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
+    extra_args: EXTRA_CONF_FILE=overlay-app_fota.conf
+                SB_CONFIG_BOOTLOADER_MCUBOOT=y
+  applications.modem_shell.carrier:
+    sysbuild: true
+    build_only: true
+    extra_args: EXTRA_CONF_FILE=overlay-carrier.conf
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
+  applications.modem_shell.lwm2m:
+    sysbuild: true
+    build_only: true
+    extra_configs:
+      - CONFIG_MOSH_LWM2M_PSK="000102030405060708090a0b0c0d0e0f"
+    extra_args: EXTRA_CONF_FILE=overlay-lwm2m.conf
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
+  applications.modem_shell.lwm2m_bootstrap:
+    sysbuild: true
+    build_only: true
+    extra_configs:
+      - CONFIG_MOSH_LWM2M_PSK="000102030405060708090a0b0c0d0e0f"
+    extra_args: EXTRA_CONF_FILE="overlay-lwm2m.conf;overlay-lwm2m_bootstrap.conf"
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
+  applications.modem_shell.lwm2m_pgps:
+    sysbuild: true
+    build_only: true
+    extra_configs:
+      - CONFIG_MOSH_LWM2M_PSK="000102030405060708090a0b0c0d0e0f"
+    extra_args: EXTRA_CONF_FILE="overlay-lwm2m.conf;overlay-lwm2m_pgps.conf;overlay-pgps.conf"
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
+  applications.modem_shell.pgps:
+    sysbuild: true
+    build_only: true
+    extra_args: EXTRA_CONF_FILE=overlay-pgps.conf
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
+  applications.modem_shell.pgps_coap:
+    sysbuild: true
+    build_only: true
+    extra_args: EXTRA_CONF_FILE="overlay-pgps.conf;overlay-cloud_coap.conf"
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
+  applications.modem_shell.location_service_ext:
+    sysbuild: true
+    build_only: true
+    extra_configs:
+      - CONFIG_LOCATION_SERVICE_EXTERNAL=y
+    extra_args: EXTRA_CONF_FILE=overlay-cloud_mqtt.conf
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
+  applications.modem_shell.ppp:
+    sysbuild: true
+    build_only: true
+    extra_args: EXTRA_CONF_FILE=overlay-ppp.conf EXTRA_DTC_OVERLAY_FILE="ppp.overlay"
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
+  applications.modem_shell.rtt:
+    sysbuild: true
+    build_only: true
+    extra_args: EXTRA_CONF_FILE=overlay-rtt.conf
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
+  # Configurations with modem RTT traces to make sure they fit into image.
+  applications.modem_shell_modem_uart_rtt:
+    sysbuild: true
+    build_only: true
+    extra_args: modem_shell_SNIPPET="nrf91-modem-trace-rtt"
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
+  applications.modem_shell.non_offloading_ip_modem_rtt_trace:
+    sysbuild: true
+    build_only: true
+    extra_args:
+      EXTRA_CONF_FILE=overlay-non-offloading.conf
+      modem_shell_SNIPPET="nrf91-modem-trace-rtt"
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
