@@ -1,0 +1,51 @@
+# Copyright (c) 2016-2025 Makerdiary <https://makerdiary.com>
+name: Twister Apps & Samples
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # Run at 03:00 UTC on every Sunday
+    - cron: "0 3 * * 0"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, macos-13, macos-14, windows-2022]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: nrf9151-connectkit
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Setup Zephyr project
+        uses: zephyrproject-rtos/action-zephyr-setup@v1
+        with:
+          app-path: nrf9151-connectkit
+          toolchains: arm-zephyr-eabi
+
+      - name: Twister Applications
+        working-directory: nrf9151-connectkit
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            EXTRA_TWISTER_FLAGS="--short-build-path -O/tmp/twister-out"
+          fi
+          west twister -T applications -v --inline-logs --integration $EXTRA_TWISTER_FLAGS
+
+      - name: Twister Samples
+        working-directory: nrf9151-connectkit
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            EXTRA_TWISTER_FLAGS="--short-build-path -O/tmp/twister-out"
+          fi
+          west twister -T samples -v --inline-logs --integration $EXTRA_TWISTER_FLAGS

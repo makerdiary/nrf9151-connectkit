@@ -4,8 +4,7 @@
 
 [![Current Version](https://img.shields.io/github/tag/makerdiary/nrf9151-connectkit.svg)](https://github.com/makerdiary/nrf9151-connectkit/tags)
 [![Documentation](https://github.com/makerdiary/nrf9151-connectkit/actions/workflows/documentation.yml/badge.svg?branch=main)](https://wiki.makerdiary.com/nrf9151-connectkit)
-[![Applications](https://github.com/makerdiary/nrf9151-connectkit/actions/workflows/twister-apps.yml/badge.svg?branch=main)](https://wiki.makerdiary.com/nrf9151-connectkit/guides/ncs/applications/)
-[![Samples](https://github.com/makerdiary/nrf9151-connectkit/actions/workflows/twister-samples.yml/badge.svg?branch=main)](https://wiki.makerdiary.com/nrf9151-connectkit/guides/ncs/samples/)
+[![Twister Apps & Samples](https://github.com/makerdiary/nrf9151-connectkit/actions/workflows/twister-apps-samples.yml/badge.svg?branch=main)](https://wiki.makerdiary.com/nrf9151-connectkit/guides/ncs/)
 [![PRs Welcome](https://img.shields.io/badge/Contributing-appreciated-brightgreen.svg?color=informational)](https://wiki.makerdiary.com/nrf9151-connectkit/contributing/)
 
 ## Introduction
