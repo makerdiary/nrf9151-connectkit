@@ -1,0 +1,314 @@
+# Copyright (c) 2016-2025 Makerdiary <https://makerdiary.com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Project information
+site_name: nRF9151 Connect Kit
+site_url: https://wiki.makerdiary.com/nrf9151-connectkit
+site_author: makerdiary
+site_description: >-
+  The documentation offers all you need to start developing with nRF9151 Connect Kit.
+  nRF9151 Connect Kit is a versatile prototyping kit built around the nRF9151 SiP with
+  LTE-M, NB-IoT, GNSS, and DECT NR+. It comes with built-in Interface MCU for debug and
+  programming, flexible power management with battery charger, easy-to-use form factor,
+  nRF Connect SDK support including the Zephyr RTOS, various samples and documentation to
+  quickly prototype Cellular IoT applications.
+
+# Repository
+repo_name: makerdiary/nrf9151-connectkit
+repo_url: https://github.com/makerdiary/nrf9151-connectkit
+edit_uri: edit/main/docs/
+
+# Copyright
+copyright: 'Copyright &copy; 2016-2025 <a href="https://makerdiary.com" target="_blank">makerdiary</a>'
+
+# Configuration
+theme:
+  name: material
+  custom_dir: docs/.overrides
+  features:
+    - announce.dismiss
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
+    - content.code.copy
+    # - content.code.select
+    # - content.footnote.tooltips
+    # - content.tabs.link
+    - content.tooltips
+    # - header.autohide
+    # - navigation.expand
+    - navigation.footer
+    - navigation.indexes
+    # - navigation.instant
+    # - navigation.instant.prefetch
+    # - navigation.instant.progress
+    # - navigation.prune
+    - navigation.sections
+    - navigation.tabs
+    # - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    # - toc.integrate
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/link
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  font:
+    text: Roboto
+    code: Roboto Mono
+  favicon: assets/favicon.png
+  icon:
+    logo: logo
+
+  # Announcement bar
+  announcement: ""
+  # Home page
+  home:
+    hero:
+      title: Rapid Prototyping Kit with Cellular IoT Connectivity
+      description: >-
+        Versatile prototyping kit built around the nRF9151 SiP with LTE-M, NB-IoT, GNSS, and DECT NR+.
+        Comes with on-board Interface MCU for debug and programming, flexible power management with battery
+        charger, easy-to-use form factor, nRF Connect SDK support including the Zephyr RTOS, various samples
+        and documentation to quickly prototype Cellular IoT applications.
+      image: assets/images/nrf9151_connectkit_prod_hero_reva.png
+      button_primary:
+        label: Quick Start
+        link: getting-started
+      button_secondary:
+        label: Buy Now
+        link: https://makerdiary.com/products/nrf9151-connectkit
+    multicolumn:
+      id: everything-you-would-expect
+      heading: Everything you would expect
+      columns:
+        - icon: microcotroller
+          title: Built around nRF9151 SiP
+          description: >-
+            nRF9151 is a low power and highly integrated SiP with 64 MHz Arm Cortex-M33 and multimode LTE-M/NB-IoT modem
+            with DECT NR+ support and GNSS. It has global band support, Arm TrustZone CryptoCell 310, unique modem features
+            for further power saving and ease of use.
+        - icon: material/console-network
+          title: On-board Interface MCU
+          description: >-
+            Built-in CMSIS-DAP support for debug, programming as well as modem firmware update, no need for any external
+            tools. Interface MCU also includes a USB-UART bridge for log, trace and terminal emulation, and an Interface
+            Shell to access the board-specific functionality.
+        - icon: material/chip
+          title: Easy-to-use Form Factor
+          description: >-
+            Featuring USB-C, LEDs, Buttons, nano-SIM card slot, Battery connector, U.FL receptacles for U.FL cabled LTE-M/NB-IoT/NR+
+            and GNSS antennas, Arm Serial Wire Debug (SWD) port and dual-row 40 pins with loose or pre-soldered headers available.
+        - icon: material/cable-data
+          title: Flexible Power Management
+          description: >-
+            Built using BQ25180 I2C programmable battery charger with power path management and ultra low quiescent current,
+            and TPS63901 buck-boost converter with 75-nA quiescent current and 1.8V/3.3V configurable power supply for I/Os.
+
+        - icon: material/link-box-variant
+          title: Built on Open Source
+          description: >-
+            nRF Connect SDK is supported, including the Zephyr RTOS, various samples, networking protocols, libraries, and hardware
+            drivers, all essential for cellular IoT development. It is open source, and can be leveraged and modified to suit your
+            specific needs.
+        - icon: material/file-document-check
+          title: Well Documented
+          description: >-
+            An extensive set of documentation is available, including getting started and developer guides which can help
+            you save big by reducing development effort. The documentation is hosted as a GitHub repository that allows
+            managing the updates over time.
+    news:
+      id: what-is-new
+      heading: What's new
+      viewall: blog
+      posts:
+        - title: Introducing nRF Cloud
+          excerpt: >-
+            nRF Cloud offers a suite of services optimized for Nordic ultra-low power wireless devices that supports your IoT deployment throughout its entire lifecycle.
+          cover: blog/introducing-nrf-cloud/cover.png
+          url: blog/introducing-nrf-cloud
+          date: 2025-02-28
+          readtime: 4
+        - title: Introducing Interface MCU
+          excerpt: >-
+            The Interface MCU simplifies debugging and programming of the nRF9151 SiP without external tools and provides access to board-specific features.
+          cover: blog/introducing-interface-mcu/cover.png
+          url: blog/introducing-interface-mcu
+          date: 2025-02-27
+          readtime: 3
+        - title: nRF9151 Connect Kit is Here!
+          excerpt: >-
+            Today we are excited to launch our latest IoT prototyping kit, the nRF9151 Connect Kit, for LTE-M, NB-IoT, DECT NR+, and GNSS applications.
+          cover: blog/nrf9151-connect-kit-is-here/cover.png
+          url: blog/nrf9151-connect-kit-is-here
+          date: 2025-02-26
+          readtime: 4
+
+# Plugins
+plugins:
+  - search:
+      separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - blog:
+      blog_dir: blog
+      post_date_format: medium
+      pagination_per_page: 6
+      pagination_keep_content: true
+      post_url_format: "{slug}"
+      post_readtime_words_per_minute: 128
+      categories: false
+      archive: false
+  - minify:
+      minify_html: true
+
+# Additional configuration
+extra:
+  generator: false
+  status:
+    new: Recently added
+    deprecated: Deprecated
+  analytics:
+    provider: google
+    property: !ENV GOOGLE_ANALYTICS_KEY
+  social:
+    - icon: fontawesome/brands/shopify
+      link: https://makerdiary.com
+    - icon: fontawesome/brands/github
+      link: https://github.com/makerdiary
+    - icon: fontawesome/brands/x-twitter
+      link: https://x.com/makerdiary
+    - icon: fontawesome/brands/discourse
+      link: https://community.makerdiary.com
+    - icon: fontawesome/brands/youtube
+      link: https://www.youtube.com/@makerdiary
+    - icon: fontawesome/solid/blog
+      link: https://blog.makerdiary.com
+    - icon: fontawesome/brands/medium
+      link: https://medium.com/makerdiary
+    - icon: fontawesome/solid/envelope
+      link: mailto:hi@makerdiary.com
+
+extra_css:
+  - assets/stylesheets/extra.css
+
+# Extensions
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      options:
+        custom_icons:
+          - .overrides/.icons
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      normalize_issue_symbols: true
+      repo_url_shorthand: true
+      user: makerdiary
+      repo: nrf9151-connectkit
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Page tree
+nav:
+  - Home: index.md
+  - Product:
+    - Introduction: introduction.md
+    - Hardware description: hardware.md
+    - Purchase: purchase.md
+    - Resources: resources.md
+    - Revision history: revision-history.md
+    - License: LICENSE.md
+  - Getting Started:
+    - Quick Start Guide: getting-started.md
+    - Troubleshooting: troubleshooting.md
+  - Developer Guides:
+    - nRF Connect SDK:
+      - guides/ncs/index.md
+      - Getting Started Guide: guides/ncs/getting-started.md
+      - Applications:
+        - guides/ncs/applications/index.md
+        - Modem Shell: guides/ncs/applications/modem_shell.md
+        - Serial LTE Modem: guides/ncs/applications/serial_lte_modem.md
+        - Interface MCU Firmware: guides/ncs/applications/ifmcu.md
+      - Samples:
+        - guides/ncs/samples/index.md
+        - Hello World: guides/ncs/samples/hello_world.md
+        - Button: guides/ncs/samples/button.md
+        - ADC: guides/ncs/samples/adc.md
+        - Shell: guides/ncs/samples/shell.md
+        - AT Client: guides/ncs/samples/at_client.md
+        - AT Monitor: guides/ncs/samples/at_monitor.md
+        - Modem Battery: guides/ncs/samples/modem_battery.md
+        - Modem Callbacks: guides/ncs/samples/modem_callbacks.md
+        - Modem Trace Backend: guides/ncs/samples/modem_trace_backend.md
+        - GNSS: guides/ncs/samples/gnss.md
+        - TLS Cipher Suites: guides/ncs/samples/tls_cipher_suites.md
+        - HTTPS Client: guides/ncs/samples/https_client.md
+        - CoAP Client: guides/ncs/samples/coap_client.md
+        - UDP: guides/ncs/samples/udp.md
+        - MQTT: guides/ncs/samples/mqtt.md
+        - nRF Cloud Device Provisioning: guides/ncs/samples/nrf_provisioning.md
+        - nRF Cloud REST Device Message: guides/ncs/samples/nrf_cloud_rest_device_message.md
+        - nRF Cloud Multi-service: guides/ncs/samples/nrf_cloud_multi_service.md
+    - Programming Guide:
+      - guides/programming/index.md
+      - Update nRF9151 Firmware: guides/programming/update-nrf9151-fw.md
+      - Update Interface MCU Firmware: guides/programming/update-ifmcu-fw.md
+  - Blog:
+    - blog/index.md
+  - Community:
+    - Contributing:
+      - contributing/index.md
+      - Reporting a bug: contributing/reporting-a-bug.md
+      - Creating a pull request: contributing/creating-a-pull-request.md
+      - Asking a question: https://github.com/makerdiary/nrf9151-connectkit/discussions
