@@ -10,11 +10,7 @@ on:
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-22.04, macos-13, macos-14, windows-2022]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,16 +32,10 @@ jobs:
         working-directory: nrf9151-connectkit
         shell: bash
         run: |
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            EXTRA_TWISTER_FLAGS="--short-build-path -O/tmp/twister-out"
-          fi
-          west twister -T applications -v --inline-logs --integration $EXTRA_TWISTER_FLAGS
+          west twister -T applications -v --inline-logs --integration
 
       - name: Twister Samples
         working-directory: nrf9151-connectkit
         shell: bash
         run: |
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            EXTRA_TWISTER_FLAGS="--short-build-path -O/tmp/twister-out"
-          fi
-          west twister -T samples -v --inline-logs --integration $EXTRA_TWISTER_FLAGS
+          west twister -T samples -v --inline-logs --integration

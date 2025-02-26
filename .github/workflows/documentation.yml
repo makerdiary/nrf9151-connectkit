@@ -22,6 +22,10 @@
 name: Documentation
 on:
   push:
+    paths:
+      - 'mkdocs.yml'
+      - 'scripts/requirements-docs.txt'
+      - 'docs/**'
     branches:
       - main
 env:
