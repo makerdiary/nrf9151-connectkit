@@ -102,7 +102,7 @@ tests:
   applications.modem_shell.ppp:
     sysbuild: true
     build_only: true
-    extra_args: EXTRA_CONF_FILE=overlay-ppp.conf EXTRA_DTC_OVERLAY_FILE="ppp.overlay"
+    extra_args: EXTRA_CONF_FILE="overlay-ppp.conf;overlay-rtt.conf" EXTRA_DTC_OVERLAY_FILE="ppp.overlay"
     integration_platforms:
       - nrf9151_connectkit/nrf9151/ns
   applications.modem_shell.rtt:
