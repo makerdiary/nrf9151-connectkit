@@ -1,0 +1,18 @@
+identifier: nrf9151_connectkit/nrf52820
+name: nRF9151-Connect-Kit-nRF52820
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+ram: 32
+flash: 256
+supported:
+  - usb_device
+  - usbd
+  - ble
+  - gpio
+  - watchdog
+  - counter
+vendor: makerdiary

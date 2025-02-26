@@ -1,0 +1,18 @@
+identifier: nrf9151_connectkit/nrf9151/ns
+name: nRF9151-Connect-Kit-nRF9151-Non-Secure
+type: mcu
+arch: arm
+toolchain:
+  - gnuarmemb
+  - xtools
+  - zephyr
+ram: 128
+flash: 192
+supported:
+  - gpio
+  - spi
+  - i2c
+  - pwm
+  - watchdog
+  - netif:modem
+vendor: makerdiary

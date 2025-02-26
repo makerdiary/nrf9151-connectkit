@@ -1,0 +1,18 @@
+identifier: nrf9151_connectkit/nrf9151
+name: nRF9151-Connect-Kit-nRF9151
+type: mcu
+arch: arm
+toolchain:
+  - gnuarmemb
+  - xtools
+  - zephyr
+ram: 88
+flash: 1024
+supported:
+  - gpio
+  - spi
+  - i2c
+  - pwm
+  - watchdog
+  - counter
+vendor: makerdiary

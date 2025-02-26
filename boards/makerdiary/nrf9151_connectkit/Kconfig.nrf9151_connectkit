@@ -1,0 +1,8 @@
+# nRF9151 Connect Kit board configuration
+
+# Copyright (c) 2016-2025 Makerdiary <https://makerdiary.com>
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_NRF9151_CONNECTKIT
+	select SOC_NRF52820_QDAA if BOARD_NRF9151_CONNECTKIT_NRF52820
+	select SOC_NRF9151_LACA if BOARD_NRF9151_CONNECTKIT_NRF9151 || BOARD_NRF9151_CONNECTKIT_NRF9151_NS

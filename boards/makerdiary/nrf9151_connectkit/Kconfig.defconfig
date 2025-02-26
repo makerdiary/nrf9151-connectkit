@@ -1,0 +1,50 @@
+# nRF9151 Connect Kit board configuration
+
+# Copyright (c) 2016-2025 Makerdiary <https://makerdiary.com>
+# SPDX-License-Identifier: Apache-2.0
+
+if BOARD_NRF9151_CONNECTKIT
+
+config HW_STACK_PROTECTION
+	default ARCH_HAS_STACK_PROTECTION
+
+endif # BOARD_NRF9151_CONNECTKIT
+
+if BOARD_NRF9151_CONNECTKIT_NRF9151 || BOARD_NRF9151_CONNECTKIT_NRF9151_NS
+
+# For the secure version of the board the firmware is linked at the beginning
+# of the flash, or into the code-partition defined in DT if it is intended to
+# be loaded by MCUboot. If the secure firmware is to be combined with a non-
+# secure image (TRUSTED_EXECUTION_SECURE=y), the secure FW image shall always
+# be restricted to the size of its code partition.
+# For the non-secure version of the board, the firmware
+# must be linked into the code-partition (non-secure) defined in DT, regardless.
+# Apply this configuration below by setting the Kconfig symbols used by
+# the linker according to the information extracted from DT partitions.
+
+# Workaround for not being able to have commas in macro arguments
+DT_CHOSEN_Z_CODE_PARTITION := zephyr,code-partition
+
+config FLASH_LOAD_SIZE
+	default $(dt_chosen_reg_size_hex,$(DT_CHOSEN_Z_CODE_PARTITION))
+	depends on BOARD_CONNECTKIT_NRF9151 && TRUSTED_EXECUTION_SECURE
+
+if BOARD_NRF9151_CONNECTKIT_NRF9151_NS
+
+config FLASH_LOAD_OFFSET
+	default $(dt_chosen_reg_addr_hex,$(DT_CHOSEN_Z_CODE_PARTITION))
+
+config FLASH_LOAD_SIZE
+	default $(dt_chosen_reg_size_hex,$(DT_CHOSEN_Z_CODE_PARTITION))
+
+endif # BOARD_NRF9151_CONNECTKIT_NRF9151_NS
+
+endif # BOARD_NRF9151_CONNECTKIT_NRF9151 || BOARD_NRF9151_CONNECTKIT_NRF9151_NS
+
+if BOARD_NRF9151_CONNECTKIT_NRF52820
+
+choice CLOCK_CONTROL_NRF_SOURCE
+	default CLOCK_CONTROL_NRF_K32SRC_RC
+endchoice
+
+endif # BOARD_NRF9151_CONNECTKIT_NRF52820
