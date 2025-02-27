@@ -17,7 +17,7 @@ Before you start, check that you have the required hardware and software:
 The application firmware is compatible with the UF2 Bootloader, so that you can easily update the firmware by just copying the .uf2-format file to the flash drive without using an external programmer.
 
 !!! Tip
-	The pre-built firmware is located in [firmware/ifmcu/app]. Alternatively, you may build your own firmware by completing the steps in the [Interface MCU Firmware] documentation. 
+	The pre-built firmware will be published on [GitHub Releases]. Alternatively, you may build your own firmware by completing the steps in the [Interface MCU Firmware] documentation. 
 
 To update the firmware, complete the following steps:
 
@@ -51,7 +51,7 @@ To update the firmware, complete the following steps:
 The UF2 Bootloader is self-upgradable, and you can simply update the bootloader by just copying the .uf2-format file to the flash drive without using an external programmer.
 
 !!! Tip
-	The pre-built bootloader is located in [firmware/ifmcu/uf2_bootloader] with the name `update-nrf9151_connectkit_nrf52820_uf2boot-<version>.uf2`.
+	The pre-built bootloader will be published on [GitHub Releases] with the name `update-nrf9151_connectkit_nrf52820_uf2boot-<version>.uf2`.
 
 
 To update the bootloader, complete the following steps:
@@ -92,7 +92,7 @@ To update the bootloader, complete the following steps:
 If your device fails to enter the bootloader mode, you may need to perform a recovery from a broken UF2 bootloader. To re-program the UF2 Bootloader, an external debug probe is needed.
 
 !!! Tip
-	The pre-built bootloader is located in [firmware/ifmcu/uf2_bootloader] with the name `nrf9151_connectkit_nrf52820_uf2boot-<version>.hex`.
+	The pre-built bootloader will be published on [GitHub Releases] with the name `nrf9151_connectkit_nrf52820_uf2boot-<version>.hex`.
 
 The SWD port of Interface MCU (nRF52820) is exposed on the bottom of the board. Note that the signal voltage levels of SWD should match to __VDD_GPIO__.
 
@@ -100,7 +100,5 @@ The following figure illustrates the SWD port of the Interface MCU (nRF52820):
 
 ![](../../assets/images/nrf52820_swd_port.png)
 
-
-[firmware/ifmcu/app]: https://github.com/makerdiary/nrf9151-connectkit/tree/main/firmware/ifmcu/app
-[firmware/ifmcu/uf2_bootloader]: https://github.com/makerdiary/nrf9151-connectkit/tree/main/firmware/ifmcu/uf2_bootloader
+[GitHub Releases]: https://github.com/makerdiary/nrf9151-connectkit/releases
 [Interface MCU Firmware]: ../ncs/applications/ifmcu.md
