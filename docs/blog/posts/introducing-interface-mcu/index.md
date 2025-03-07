@@ -1,6 +1,6 @@
 ---
 title: Introducing Interface MCU
-date: 2024-02-27
+date: 2024-03-10
 authors:
   - makerdiary
 cover: cover.png
@@ -16,7 +16,7 @@ description: >
 
 The nRF9151 Connect Kit comes with an on-board Interface MCU built using the nRF52820. The Interface MCU Firmware is running on the nRF52820. It implements a CMSIS-DAP interface for debugging and programming the nRF9151 SiP. It also exposes two USB CDC ACM devices, one acts as a UART bridge between the host and the nRF9151 SiP, the other enables an Interface Shell for accessing board-specific functionality such as battery charger settings.
 
-The Interface MCU also comes pre-programmed with the [UF2 Bootloader], an easy-to-use and self-upgradable bootloader that can be used to update the firmware by just copying the .uf2-format images to the flash drive without using an external programmer.
+The Interface MCU also comes pre-programmed with the UF2 Bootloader, an easy-to-use and self-upgradable bootloader that can be used to update the firmware by just copying the .uf2-format images to the flash drive without using an external programmer.
 
 The following figure describes the functional architecture of the Interface MCU:
 
@@ -43,6 +43,5 @@ The Interface MCU firmware is open source, and detailed documentation is availab
 
 </div>
 
-[UF2 Bootloader]: https://github.com/makerdiary/nrf9151-connectkit/tree/main/firmware/ifmcu/uf2_bootloader
 [Interface MCU Firmware Source Code]: https://github.com/makerdiary/nrf9151-connectkit/tree/main/applications/ifmcu_firmware
 [Interface MCU Firmware Documentation]: ./../../../guides/ncs/applications/ifmcu.md

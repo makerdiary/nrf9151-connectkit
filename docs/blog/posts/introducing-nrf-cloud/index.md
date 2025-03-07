@@ -1,6 +1,6 @@
 ---
 title: Introducing nRF Cloud
-date: 2024-02-28
+date: 2024-03-11
 authors:
   - makerdiary
 cover: cover.png
