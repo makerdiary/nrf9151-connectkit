@@ -1,4 +1,4 @@
-# nRF9151 Connect Kit<br/><small>Versatile Prototyping Kit built around the nRF9151 SiP with LTE-M, NB-IoT, GNSS, and DECT NR+</small>
+# nRF9151 Connect Kit<br/><small>Versatile Prototyping Kit based on the nRF9151 SiP supporting LTE-M/NB-IoT Worldwide, DECT NR+ and GNSS</small>
 
 ## Introduction
 

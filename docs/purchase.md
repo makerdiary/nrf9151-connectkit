@@ -7,7 +7,7 @@ nRF9151 Connect Kit is available on the following channels (click to go directly
 <div class="grid cards" markdown>
 - [![makerdiary store](assets/images/makerdiary-store-light.png#only-light){ width='256' } ![makerdiary store](assets/images/makerdiary-store-dark.png#only-dark){ width='256' }](https://makerdiary.com/products/nrf9151-connectkit)
 - [![Taobao](assets/images/taobao-store.png){ width='140' }](https://zaowubang.taobao.com)
-- [![Tindie](assets/images/tindie-store.png){ width='128' }](https://www.tindie.com/products/makerdiary/nrf9151-connectkit/)
+- [![Tindie](assets/images/tindie-store.png){ width='128' }](https://www.tindie.com/products/makerdiary/nrf9151-connect-kit)
 </div>
 
 ## Request Large Volume Pricing

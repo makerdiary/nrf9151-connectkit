@@ -1,6 +1,6 @@
 # nRF9151 Connect Kit
 
-> Versatile Prototyping Kit built around the nRF9151 SiP with LTE-M, NB-IoT, GNSS, and DECT NR+
+> Versatile Prototyping Kit based on the nRF9151 SiP supporting LTE-M/NB-IoT Worldwide, DECT NR+ and GNSS
 
 [![Current Version](https://img.shields.io/github/tag/makerdiary/nrf9151-connectkit.svg)](https://github.com/makerdiary/nrf9151-connectkit/tags)
 [![Documentation](https://github.com/makerdiary/nrf9151-connectkit/actions/workflows/documentation.yml/badge.svg?branch=main)](https://wiki.makerdiary.com/nrf9151-connectkit)
@@ -86,8 +86,8 @@ We offer a comprehensive set of documentation, including getting started guides,
 nRF9151 Connect Kit is available on the following channels (click to go directly to the product):
 
 <a href="https://makerdiary.com/products/nrf9151-connectkit"><img alt="makerdiary store" display="inline" src="./docs/assets/images/makerdiary-store-github.png" width="256"></a>
-<a href="https://item.taobao.com/item.htm?id=835308027346"><img alt="Taobao" display="inline" src="./docs/assets/images/taobao-store-github.png" width="256"></a>
-<a href="https://www.tindie.com/products/makerdiary/"><img alt="Tindie" display="inline" src="./docs/assets/images/tindie-store-github.png" width="256"></a>
+<a href="https://zaowubang.taobao.com"><img alt="Taobao" display="inline" src="./docs/assets/images/taobao-store-github.png" width="256"></a>
+<a href="https://www.tindie.com/products/makerdiary/nrf9151-connect-kit"><img alt="Tindie" display="inline" src="./docs/assets/images/tindie-store-github.png" width="256"></a>
 
 ## Community Support
 

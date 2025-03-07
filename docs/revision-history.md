@@ -8,6 +8,6 @@
 
 ## Software & Documentation
 
-### V1.0.0 <small>Feb 27, 2025</small> { id="DOC_V1.0.0" }
+### V1.0.0 <small>Mar 7, 2025</small> { id="DOC_V1.0.0" }
 
 - The first public release
