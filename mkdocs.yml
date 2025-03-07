@@ -85,10 +85,7 @@ theme:
     hero:
       title: Rapid Prototyping Kit with Cellular IoT Connectivity
       description: >-
-        Versatile prototyping kit built around the nRF9151 SiP with LTE-M, NB-IoT, GNSS, and DECT NR+.
-        Comes with on-board Interface MCU for debug and programming, flexible power management with battery
-        charger, easy-to-use form factor, nRF Connect SDK support including the Zephyr RTOS, various samples
-        and documentation to quickly prototype Cellular IoT applications.
+        Based on the nRF9151 SiP, featuring LTE-M/NB-IoT Worldwide, DECT NR+ & GNSS, Interface MCU, Battery Charger, Easy-to-use Form Factor and nRF Connect SDK support.
       image: assets/images/nrf9151_connectkit_prod_hero_reva.png
       button_primary:
         label: Quick Start
@@ -135,32 +132,6 @@ theme:
             An extensive set of documentation is available, including getting started and developer guides which can help
             you save big by reducing development effort. The documentation is hosted as a GitHub repository that allows
             managing the updates over time.
-    news:
-      id: what-is-new
-      heading: What's new
-      viewall: blog
-      posts:
-        - title: Introducing nRF Cloud
-          excerpt: >-
-            nRF Cloud offers a suite of services optimized for Nordic ultra-low power wireless devices that supports your IoT deployment throughout its entire lifecycle.
-          cover: blog/introducing-nrf-cloud/cover.png
-          url: blog/introducing-nrf-cloud
-          date: 2025-02-28
-          readtime: 4
-        - title: Introducing Interface MCU
-          excerpt: >-
-            The Interface MCU simplifies debugging and programming of the nRF9151 SiP without external tools and provides access to board-specific features.
-          cover: blog/introducing-interface-mcu/cover.png
-          url: blog/introducing-interface-mcu
-          date: 2025-02-27
-          readtime: 3
-        - title: nRF9151 Connect Kit is Here!
-          excerpt: >-
-            Today we are excited to launch our latest IoT prototyping kit, the nRF9151 Connect Kit, for LTE-M, NB-IoT, DECT NR+, and GNSS applications.
-          cover: blog/nrf9151-connect-kit-is-here/cover.png
-          url: blog/nrf9151-connect-kit-is-here
-          date: 2025-02-26
-          readtime: 4
 
 # Plugins
 plugins:
