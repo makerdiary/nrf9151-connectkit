@@ -3,6 +3,15 @@ name: Twister Apps & Samples
 
 on:
   push:
+    paths:
+      - 'applications/**'
+      - 'boards/**'
+      - 'samples/**'
+      - 'zephyr/**'
+      - 'CMakeLists.txt'
+      - 'Kconfig'
+      - 'VERSION'
+      - 'west.yml'
   pull_request:
   schedule:
     # Run at 03:00 UTC on every Sunday
