@@ -261,53 +261,9 @@
     {% endif %}
   {% endif %}
 
-  {% if config.theme.home.news %}
-    {% if config.theme.home.news.heading %}
-    <header class="md-typeset">
-      <h1 id="{{ config.theme.home.news.id }}">{{ config.theme.home.news.heading }}<a href="#{{ config.theme.home.news.id }}" class="headerlink" title="Permanent link"> ¶ </a> </h1>
-    </header>
-  {% endif %}
-    <div class="md-post__grid md-post__cards">
-      <ul>
-        {% for post in config.theme.home.news.posts %}
-          {% if loop.index < 4 %}
-            <li>
-              <img src="{{ post.cover | url }}" alt="{{ post.title | e }}" loading="lazy">
-              <h2><a href="{{ post.url | url }}" class="toclink">{{ post.title }}</a></h2>
-              <p>{{ post.excerpt }}</p>
-              <div class="md-post__meta md-meta">
-                <div class="md-meta__list">
-                  <!-- Post Date-->
-                  <div class="md-meta__item">
-                    <span class="twemoji">{% include ".icons/octicons/calendar-24.svg" %}</span>
-                    <time datetime="{{ post.date }}">
-                      {{- post.date | date -}}
-                    </time>
-                    {#- Collapse whitespace -#}
-                  </div>
-                  <!-- Post readtime -->
-                  {% if post.readtime %}
-                    {% set time = post.readtime %}
-                    <div class="md-meta__item">
-                      <span class="twemoji">{% include ".icons/octicons/clock-24.svg" %}</span>
-                      {% if time == 1 %}
-                        {{ lang.t("readtime.one") }}
-                      {% else %}
-                        {{ lang.t("readtime.other") | replace("#", time) }}
-                      {% endif %}
-                    </div>
-                  {% endif %}
-                </div>
-              </div>
-            </li>
-          {% endif %}
-        {% endfor %}
-      </ul>
-    </div>
-    <div class="md-typeset mdx-news__viewall">
-      <a href="{{ config.theme.home.news.viewall | url }}" class="md-button md-button--primary"> View all </a>
-    </div>
-  {% endif %}
+  <header class="md-typeset">
+    {{ page.content }}
+  </header>
 
 {% endblock %}
 
