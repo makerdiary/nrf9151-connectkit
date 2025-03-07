@@ -102,7 +102,9 @@
           {% for post in posts %}
             <li>
               {% set cover = site_url ~ post.url ~ post.meta.cover %}
-              <img src="{{ cover | url }}" alt="{{ post.meta.title | e }}" loading="lazy">
+              <a href="{{ post.url | url }}">
+                <img src="{{ cover | url }}" alt="{{ post.meta.title | e }}" loading="lazy">
+              </a>
               <h2><a href="{{ post.url | url }}" class="toclink">{{ post.meta.title }}</a></h2>
               <p>{{ post.meta.description }}</p>
               <div class="md-post__meta md-meta">
