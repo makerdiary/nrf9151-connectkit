@@ -59,6 +59,14 @@ const static char * const ilim_descr[] = {
 	[7] = "ILIM = 1100mA",
 };
 
+const static char * const status_descr[] = {
+	[0] = "Unknown",
+	[1] = "Charging",
+	[2] = "Discharging",
+	[3] = "Not Charging",
+	[4] = "Charging Full",
+};
+
 static const struct device *chgdev = DEVICE_DT_GET(DT_NODELABEL(charger));
 
 static struct k_work_delayable charging_dwork;
@@ -421,6 +429,21 @@ static int cmd_charger_ilim(const struct shell *sh, size_t argc, char **argv)
 	return 0;
 }
 
+static int cmd_charger_status(const struct shell *sh, size_t argc, char **argv)
+{
+	int ret;
+	union charger_propval val;
+
+	ret = charger_get_prop(chgdev, CHARGER_PROP_STATUS, &val);
+	if (ret < 0) {
+		shell_error(sh, "Cannot get Charger Status: (err = %d)", ret);
+		return ret;
+	}
+
+	shell_print(sh, "[%d]: %s", val.status, status_descr[val.status]);
+	return 0;
+}
+
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_charger,
 	SHELL_CMD_ARG(chgdis, NULL,
 		"Charge Disable\n"
@@ -441,6 +464,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_charger,
 		"Usage: charger ilim [level: 0-7]\n"
 		"[level: 0-7] - 50mA|100mA|200mA|300mA|400mA|500mA|700mA|1100mA",
 		cmd_charger_ilim, 1, 1),
+	SHELL_CMD_ARG(status, NULL,
+		"Get Charging Status", cmd_charger_status, 1, 0),
 	SHELL_SUBCMD_SET_END /* Array terminated. */
 );
 

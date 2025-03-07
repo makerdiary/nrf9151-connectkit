@@ -8,7 +8,7 @@ This guide walks you through building and running the Interface MCU Firmware whi
 
 The nRF9151 Connect Kit comes with an on-board Interface MCU built using the nRF52820. The Interface MCU Firmware is running on the nRF52820. It implements a CMSIS-DAP interface for debugging and programming the nRF9151 SiP. It also exposes two USB CDC ACM devices, one acts as a UART bridge between the host and the nRF9151 SiP, the other enables an Interface Shell for accessing board-specific functionality such as battery charger settings.
 
-The Interface MCU also comes pre-programmed with the [UF2 Bootloader], an easy-to-use and self-upgradable bootloader that can be used to update the firmware by just copying the .uf2-format images to the flash drive without using an external programmer.
+The Interface MCU also comes pre-programmed with the UF2 Bootloader, an easy-to-use and self-upgradable bootloader that can be used to update the firmware by just copying the .uf2-format images to the flash drive without using an external programmer.
 
 The following figure describes the functional architecture of the Interface MCU:
 
@@ -45,7 +45,7 @@ Use the following steps to build the [Interface MCU Firmware] on the command lin
 
 ## Flashing the firmware
 
-The application is compatible with the [UF2 Bootloader], so that you can easily flash the firmware by just copying the `zephyr.uf2` file to the flash drive without using an external programmer. 
+The application is compatible with the UF2 Bootloader, so that you can easily flash the firmware by just copying the `zephyr.uf2` file to the flash drive without using an external programmer. 
 
 To flash the firmware, complete the following steps:
 
@@ -207,6 +207,7 @@ Subcommands:
   ilim  : Get or Set Input Current Limit
              Usage: charger ilim [level: 0-7]
              [level: 0-7] - 50mA|100mA|200mA|300mA|400mA|500mA|700mA|1100mA
+  status  : Get Charging Status
 ```
 
 ## Interface Shell Command Reference
@@ -222,6 +223,7 @@ The following table describes all supported commands of the Interface Shell:
 | __`charger ichg [0-1000]`__ | Get or Set Fast Charge Current (0-1000mA). Default 100mA. |
 | __`charger vbatreg [3500-4650]`__ | Get or Set Battery Regulation Voltage (3500-4650mV). Default 4200mV. |
 | __`charger ilim [0-7]`__ | Get or Set Input Current Limit <br/> `0`: 50mA <br/> `1`: 100mA <br/> `2`: 200mA <br/> `3`: 300mA <br/> `4`: 400mA <br/> `5` (default): 500mA <br/> `6`: 700mA <br/> `7`: 1100mA |
+| __`charger status`__ | Get Charging Status. |
 | __`clear`__ | Clear shell screen. |
 | __`device list`__ | List all configured devices in the devicetree. |
 | __`help`__ | Show help information. |
@@ -257,14 +259,12 @@ The following table describes all supported commands of the Interface Shell:
 | __`shell echo`__ | Toggle shell echo. |
 | __`shell stats reset`__ | Reset shell statistics for the Logger module. |
 | __`shell stats show`__ | Get shell statistics for the Logger module. |
-| __`simdet`__ | Check if SIM Card inserted. |
+| __`simdet`__ | Display nano-SIM Card status. |
 | __`temp`__ | Get the die temperature of the nRF52820. |
 | __`version [-a|--all]`__ | Show Interface MCU version. <br/> Use `-a` or `--all` option to show more details.|
 | __`viosel [0|1]`__ | Get or set VIO voltage <br/> `0` (default): 3.3V <br/> `1`: 1.8V |
 
 
-
-[UF2 Bootloader]: https://github.com/makerdiary/nrf9151-connectkit/tree/main/firmware/ifmcu/uf2_bootloader
 [Getting Started Guide]: ../getting-started.md
 [Interface MCU Firmware]: https://github.com/makerdiary/nrf9151-connectkit/tree/main/applications/ifmcu_firmware
 [PuTTY]: https://apps.microsoft.com/store/detail/putty/XPFNZKSKLBP7RJ

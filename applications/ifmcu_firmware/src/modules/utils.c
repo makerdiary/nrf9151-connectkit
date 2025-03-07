@@ -77,7 +77,7 @@ static int cmd_simdet(const struct shell *sh, size_t argc, char **argv)
 		shell_error(sh, "Could not read SIMDET GPIO.");
 		goto error;
 	} else {
-		shell_print(sh, "SIM Card: %s", ret? "Inserted" : "Not Inserted");
+		shell_print(sh, "%s: %s", argv[0], ret? "Inserted" : "Uninserted");
 	}
 
 error:
@@ -145,7 +145,7 @@ static int cmd_viosel(const struct shell *sh, size_t argc, char **argv)
 SHELL_CMD_ARG_REGISTER(temp, NULL,
 		   "Get the die temperature", cmd_temp, 1, 0);
 SHELL_CMD_ARG_REGISTER(simdet, NULL,
-		   "Check if SIM Card inserted", cmd_simdet, 1, 0);
+		   "Display nano-SIM Card status", cmd_simdet, 1, 0);
 SHELL_CMD_ARG_REGISTER(viosel, NULL,
 		   "Get or set VIO voltage\n"
 		   "Usage: viosel [sel: 0|1]\n"
