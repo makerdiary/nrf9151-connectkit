@@ -13,9 +13,9 @@ on:
       - 'VERSION'
       - 'west.yml'
   pull_request:
-  schedule:
+  # schedule:
     # Run at 03:00 UTC on every Sunday
-    - cron: "0 3 * * 0"
+    # - cron: "0 3 * * 0"
 
 jobs:
   build:
