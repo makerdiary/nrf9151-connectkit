@@ -165,14 +165,14 @@ extra:
       link: https://github.com/makerdiary
     - icon: fontawesome/brands/x-twitter
       link: https://x.com/makerdiary
-    - icon: fontawesome/brands/discourse
-      link: https://community.makerdiary.com
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/makerdiary
     - icon: fontawesome/brands/youtube
       link: https://www.youtube.com/@makerdiary
     - icon: fontawesome/solid/blog
       link: https://blog.makerdiary.com
-    - icon: fontawesome/brands/medium
-      link: https://medium.com/makerdiary
+    - icon: fontawesome/brands/discourse
+      link: https://community.makerdiary.com
     - icon: fontawesome/solid/envelope
       link: mailto:hi@makerdiary.com
 
