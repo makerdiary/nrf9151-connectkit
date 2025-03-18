@@ -66,6 +66,12 @@ The following figure illustrates the nRF9151 Connect Kit hardware diagram. The d
 
 [![](./docs/assets/images/nrf9151_connectkit_hw_diagram_back.png)][pinout-pdf]
 
+## Mechanical Dimensions
+
+nRF9151 Connect Kit is a 4-layer chem. Gold, 55.88mm x 20.32mm (2.2" x 0.8") 1mm thick PCB with a USB Type-C port, a battery connector, a nano-SIM card slot and 40x castellated/through-hole pins.
+
+[![](./docs/assets/images/nrf9151_connectkit_dimensions_reva.png)][dxf-files]
+
 ## Documentation
 
 We offer a comprehensive set of documentation, including getting started guides, developer guides, and code examples. These resources are designed to reduce development effort and help you achieve faster time-to-market.
