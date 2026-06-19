@@ -14,6 +14,10 @@
 #include "link_shell_print.h"
 #include "mosh_print.h"
 
+#define REDUCED_MOBILITY_DEFAULT	0
+#define REDUCED_MOBILITY_NORDIC		1
+#define REDUCED_MOBILITY_DISABLED	2
+
 const char *link_shell_print_sleep_time_to_string(uint64_t sleep_time, char *out_str_buff)
 {
 	if (sleep_time == -1) {
@@ -79,9 +83,9 @@ void link_shell_print_modem_sleep_notif(const struct lte_lc_evt *const evt)
 	}
 }
 
-void link_shell_print_modem_domain_event(enum lte_lc_modem_evt modem_evt)
+void link_shell_print_modem_domain_event(struct lte_lc_modem_evt modem_evt)
 {
-	switch (modem_evt) {
+	switch (modem_evt.type) {
 	case LTE_LC_MODEM_EVT_LIGHT_SEARCH_DONE:
 		mosh_print("Modem domain event: Light search done");
 		break;
@@ -100,17 +104,20 @@ void link_shell_print_modem_domain_event(enum lte_lc_modem_evt modem_evt)
 	case LTE_LC_MODEM_EVT_NO_IMEI:
 		mosh_print("Modem domain event: No IMEI");
 		break;
-	case LTE_LC_MODEM_EVT_CE_LEVEL_0:
-		mosh_print("Modem domain event: CE-level 0");
+	case LTE_LC_MODEM_EVT_CE_LEVEL:
+		mosh_print("Modem domain event: CE-level %d", modem_evt.ce_level);
 		break;
-	case LTE_LC_MODEM_EVT_CE_LEVEL_1:
-		mosh_print("Modem domain event: CE-level 1");
+	case LTE_LC_MODEM_EVT_RF_CAL_NOT_DONE:
+		mosh_print("Modem domain event: RF calibration not done");
 		break;
-	case LTE_LC_MODEM_EVT_CE_LEVEL_2:
-		mosh_print("Modem domain event: CE-level 2");
+	case LTE_LC_MODEM_EVT_INVALID_BAND_CONF:
+		mosh_print("Modem domain event: Invalid band configuration %d %d %d",
+			   modem_evt.invalid_band_conf.status_ltem,
+			   modem_evt.invalid_band_conf.status_nbiot,
+			   modem_evt.invalid_band_conf.status_ntn_nbiot);
 		break;
-	case LTE_LC_MODEM_EVT_CE_LEVEL_3:
-		mosh_print("Modem domain event: CE-level 3");
+	case LTE_LC_MODEM_EVT_DETECTED_COUNTRY:
+		mosh_print("Modem domain event: Detected country %u", modem_evt.detected_country);
 		break;
 	}
 }
@@ -120,6 +127,7 @@ const char *link_shell_funmode_to_string(int funmode, char *out_str_buff)
 	struct mapping_tbl_item const mapping_table[] = {
 		{ LTE_LC_FUNC_MODE_POWER_OFF, "power off" },
 		{ LTE_LC_FUNC_MODE_NORMAL, "normal" },
+		{ LTE_LC_FUNC_MODE_RX_ONLY, "RX only"},
 		{ LTE_LC_FUNC_MODE_OFFLINE, "flightmode" },
 		{ LTE_LC_FUNC_MODE_DEACTIVATE_LTE, "LTE off" },
 		{ LTE_LC_FUNC_MODE_ACTIVATE_LTE, "LTE on" },
@@ -128,6 +136,9 @@ const char *link_shell_funmode_to_string(int funmode, char *out_str_buff)
 		{ LTE_LC_FUNC_MODE_DEACTIVATE_UICC, "UICC off" },
 		{ LTE_LC_FUNC_MODE_ACTIVATE_UICC, "UICC on" },
 		{ LTE_LC_FUNC_MODE_OFFLINE_UICC_ON, "flightmode but UICC on" },
+		{ LTE_LC_FUNC_MODE_OFFLINE_KEEP_REG, "flightmode but keep registration" },
+		{ LTE_LC_FUNC_MODE_OFFLINE_KEEP_REG_UICC_ON,
+		  "flightmode but keep registration and UICC on" },
 		{ LINK_FUNMODE_NONE, "unknown" },
 		{ -1, NULL }
 	};
@@ -138,9 +149,9 @@ const char *link_shell_funmode_to_string(int funmode, char *out_str_buff)
 const char *link_shell_redmob_mode_to_string(int funmode, char *out_str_buff)
 {
 	struct mapping_tbl_item const mapping_table[] = {
-		{ LTE_LC_REDUCED_MOBILITY_DEFAULT, "default" },
-		{ LTE_LC_REDUCED_MOBILITY_NORDIC, "nordic" },
-		{ LTE_LC_REDUCED_MOBILITY_DISABLED, "disabled" },
+		{ REDUCED_MOBILITY_DEFAULT, "default" },
+		{ REDUCED_MOBILITY_NORDIC, "nordic" },
+		{ REDUCED_MOBILITY_DISABLED, "disabled" },
 		{ -1, NULL }
 	};
 
@@ -152,11 +163,12 @@ const char *link_shell_sysmode_to_string(int sysmode, char *out_str_buff)
 	struct mapping_tbl_item const mapping_table[] = {
 		{ LTE_LC_SYSTEM_MODE_LTEM, "LTE-M" },
 		{ LTE_LC_SYSTEM_MODE_NBIOT, "NB-IoT" },
-		{ LTE_LC_SYSTEM_MODE_LTEM_NBIOT, "LTE-M - NB-IoT" },
 		{ LTE_LC_SYSTEM_MODE_GPS, "GNSS" },
 		{ LTE_LC_SYSTEM_MODE_LTEM_GPS, "LTE-M - GNSS" },
-		{ LTE_LC_SYSTEM_MODE_LTEM_NBIOT_GPS, "LTE-M - NB-IoT - GNSS" },
 		{ LTE_LC_SYSTEM_MODE_NBIOT_GPS, "NB-IoT - GNSS" },
+		{ LTE_LC_SYSTEM_MODE_LTEM_NBIOT, "LTE-M - NB-IoT" },
+		{ LTE_LC_SYSTEM_MODE_LTEM_NBIOT_GPS, "LTE-M - NB-IoT - GNSS" },
+		{ LTE_LC_SYSTEM_MODE_NTN_NBIOT, "NTN NB-IoT" },
 		{ LINK_SYSMODE_NONE, "None" },
 		{ -1, NULL }
 	};
@@ -192,6 +204,7 @@ const char *link_shell_sysmode_currently_active_to_string(int actmode,
 		{ LTE_LC_LTE_MODE_NONE, "None" },
 		{ LTE_LC_LTE_MODE_LTEM, "LTE-M" },
 		{ LTE_LC_LTE_MODE_NBIOT, "NB-IoT" },
+		{ LTE_LC_LTE_MODE_NTN_NBIOT, "NTN NB-IoT" },
 		{ -1, NULL }
 	};
 
@@ -213,8 +226,23 @@ void link_shell_print_reg_status(enum lte_lc_nw_reg_status reg_status)
 	case LTE_LC_NW_REG_UNKNOWN:
 		mosh_print("Network registration status: unknown");
 		break;
+	case LTE_LC_NW_REG_RX_ONLY_NOT_REGISTERED:
+		mosh_print("Network registration status: not registered (receive only)");
+		break;
+	case LTE_LC_NW_REG_RX_ONLY_SEARCHING:
+		mosh_print("Network registration status: searching (receive only)");
+		break;
+	case LTE_LC_NW_REG_RX_ONLY_REGISTRATION_DENIED:
+		mosh_print("Network registration status: registration denied (receive only)");
+		break;
+	case LTE_LC_NW_REG_RX_ONLY_UNKNOWN:
+		mosh_print("Network registration status: unknown (receive only)");
+		break;
 	case LTE_LC_NW_REG_UICC_FAIL:
 		mosh_print("Network registration status: UICC fail");
+		break;
+	case LTE_LC_NW_REG_NO_SUITABLE_CELL:
+		mosh_print("Network registration status: no suitable cell");
 		break;
 	case LTE_LC_NW_REG_REGISTERED_HOME:
 	case LTE_LC_NW_REG_REGISTERED_ROAMING:
@@ -223,6 +251,15 @@ void link_shell_print_reg_status(enum lte_lc_nw_reg_status reg_status)
 			reg_status == LTE_LC_NW_REG_REGISTERED_HOME ?
 			"Connected - home network" :
 			"Connected - roaming");
+		break;
+	case LTE_LC_NW_REG_RX_ONLY_REGISTERED_HOME:
+	case LTE_LC_NW_REG_RX_ONLY_REGISTERED_ROAMING:
+		mosh_print(
+			"Network registration status: %s",
+			reg_status == LTE_LC_NW_REG_RX_ONLY_REGISTERED_HOME ?
+			"Connected - home network (receive only)" :
+			"Connected - roaming (receive only)");
+		break;
 	default:
 		break;
 	}

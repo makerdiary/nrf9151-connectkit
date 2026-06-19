@@ -4,12 +4,14 @@
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
+#include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include <zephyr/shell/shell.h>
 #include <zephyr/shell/shell_uart.h>
-#include <unistd.h>
-#include <getopt.h>
+#include <zephyr/sys/sys_getopt.h>
+#include <zephyr/sys/poweroff.h>
 
 #include <nrf_modem_at.h>
 #include <modem/nrf_modem_lib.h>
@@ -22,6 +24,7 @@
 #include "link_shell_pdn.h"
 #include "link_settings.h"
 #include "net_utils.h"
+#include "str_utils.h"
 
 #define LINK_SHELL_EDRX_VALUE_STR_LENGTH 4
 #define LINK_SHELL_EDRX_PTW_STR_LENGTH 4
@@ -31,6 +34,7 @@ enum link_shell_command {
 	LINK_CMD_STATUS = 0,
 	LINK_CMD_SETTINGS,
 	LINK_CMD_CONEVAL,
+	LINK_CMD_ENVEVAL,
 	LINK_CMD_DEFCONT,
 	LINK_CMD_DEFCONTAUTH,
 	LINK_CMD_RSRP,
@@ -126,6 +130,7 @@ static const char link_sysmode_usage_str[] =
 	"  -M, --ltem_gnss,        Set LTE-M + GNSS system mode\n"
 	"  -N, --nbiot_gnss,       Set NB-IoT + GNSS system mode\n"
 	"      --ltem_nbiot_gnss,  Set LTE-M + NB-IoT + GNSS system mode\n"
+	"      --ntn,              Set NTN NB-IoT system mode\n"
 	"  -h, --help,             Shows this help information\n"
 	"\n"
 	"Additional LTE mode preference that can be optionally given\n"
@@ -143,19 +148,27 @@ static const char link_sysmode_usage_str[] =
 static const char link_funmode_usage_str[] =
 	"Usage: link funmode [option] | --read\n"
 	"Options:\n"
-	"  -r, --read,              Read modem functional mode\n"
-	"  -0, --pwroff,            Set modem power off\n"
-	"  -1, --normal,            Set modem normal mode\n"
-	"      --normal_no_rel14,   Set modem normal mode without setting Release 14 features\n"
-	"  -4, --flightmode,        Set modem offline.\n"
-	"      --lteoff,            Deactivates LTE without shutting down GNSS services.\n"
-	"      --lteon,             Activates LTE without changing GNSS.\n"
-	"      --gnssoff,           Deactivates GNSS without shutting down LTE services.\n"
-	"      --gnsson,            Activates GNSS without changing LTE.\n"
-	"      --uiccoff,           Deactivates UICC.\n"
-	"      --uiccon,            Activates UICC.\n"
-	"      --flightmode_uiccon, Sets the device to flight mode without shutting down UICC.\n"
-	"  -h, --help,              Shows this help information";
+	"  -r, --read,            Read modem functional mode\n"
+	"  -0, --pwroff,          Set modem to minimum functionality mode\n"
+	"  -1, --normal,          Set modem to normal mode\n"
+	"      --normal_no_rel14, Set modem to normal mode without enabling Release 14 features\n"
+	"  -2, --rxonly,          Set modem to RX only mode\n"
+	"  -4, --flightmode,      Set modem to flight mode\n"
+	"      --lteoff,          Deactivate LTE\n"
+	"      --lteon,           Activate LTE\n"
+	"      --gnssoff,         Deactivate GNSS\n"
+	"      --gnsson,          Activate GNSS\n"
+	"      --uiccoff,         Deactivate UICC\n"
+	"      --uiccon,          Activate UICC\n"
+	"      --flightmode_uiccon,\n"
+	"                         Set modem to flight mode without shutting down UICC\n"
+	"      --flightmode_keepreg,\n"
+	"                         Set modem to flight mode while preserving the LTE registration\n"
+	"                         context\n"
+	"      --flightmode_keepreg_uiccon,\n"
+	"                         Set modem to flight mode while preserving the LTE\n"
+	"                         registration context and without shutting down UICC\n"
+	"  -h, --help,            Shows this help information";
 
 static const char link_normal_mode_at_usage_str[] =
 	"Usage: link nmodeat --read | --mem<1-3>\n"
@@ -189,6 +202,12 @@ static const char link_edrx_usage_str[] =
 	"      --nbiot_edrx, [str] Sets custom eDRX value for NB-IoT to be requested when\n"
 	"                          enabling eDRX with -e option.\n"
 	"      --nbiot_ptw, [str]  Sets custom Paging Time Window value for NB-IoT to be\n"
+	"                          requested when enabling eDRX with -e option.\n"
+	"      --ntn_nbiot_edrx, [str]\n"
+	"                          Sets custom eDRX value for NTN NB-IoT to be requested when\n"
+	"                          enabling eDRX with -e option.\n"
+	"      --ntn_nbiot_ptw, [str]\n"
+	"                          Sets custom Paging Time Window value for NTN NB-IoT to be\n"
 	"                          requested when enabling eDRX with -e option.\n"
 	"  -h, --help,             Shows this help information";
 
@@ -365,9 +384,32 @@ static const char link_modem_usage_str[] =
 	"      --init,           Initialize modem using nrf_modem_lib_init()\n"
 	"      --shutdown,       Shutdown modem\n"
 	"      --shutdown_cfun0, Send AT+CFUN=0 AT command and shutdown modem\n"
+	"      --systemoff,      Send AT+CFUN=0 AT command, shutdown modem and trigger SYSTEMOFF\n"
 	"  -h, --help,           Shows this help information\n"
 	"\n"
 	"Several options can be given and they are run in the given order.";
+
+#if defined(CONFIG_LTE_LC_ENV_EVAL_MODULE)
+static const char link_enveval_usage_str[] =
+	"Usage: link enveval --eval_type <type> --plmns <plmn1>[,<plmn2>,...] | --cancel\n"
+	"Options:\n"
+	"  --eval_type, [str]  Evaluation type:\n"
+	"                      'dynamic', 'light' or 'full'\n"
+	"  --plmns, [str]      Mobile Country Code and Mobile Network Code pairs\n"
+	"  --cancel,           Cancel ongoing environment evaluation\n"
+	"  -h, --help,         Shows this help information\n"
+	"\n"
+	"Evaluation types explained:\n"
+	"                      Dynamic: PLMN search is stopped after light search if any of the\n"
+	"                      PLMNs to evaluate were found. Search is continued over all\n"
+	"                      frequency bands if light search did not find any results.\n"
+	"\n"
+	"                      Light: PLMN search is stopped after light search even if no PLMNs\n"
+	"                      to evaluate were found.\n"
+	"\n"
+	"                      Full: PLMN search covers all channels in all supported frequency\n"
+	"                      bands.\n";
+#endif /* CONFIG_LTE_LC_ENV_EVAL_MODULE */
 
 /* The following do not have short options */
 enum {
@@ -379,6 +421,7 @@ enum {
 	LINK_SHELL_OPT_MRESET_USER,
 	LINK_SHELL_OPT_SYSMODE_LTEM_NBIOT,
 	LINK_SHELL_OPT_SYSMODE_LTEM_NBIOT_GNSS,
+	LINK_SHELL_OPT_SYSMODE_NTN,
 	LINK_SHELL_OPT_SYSMODE_PREF_AUTO,
 	LINK_SHELL_OPT_SYSMODE_PREF_LTEM,
 	LINK_SHELL_OPT_SYSMODE_PREF_NBIOT,
@@ -391,6 +434,8 @@ enum {
 	LINK_SHELL_OPT_FUNMODE_UICCOFF,
 	LINK_SHELL_OPT_FUNMODE_UICCON,
 	LINK_SHELL_OPT_FUNMODE_FLIGHTMODE_UICCON,
+	LINK_SHELL_OPT_FUNMODE_FLIGHTMODE_KEEPREG,
+	LINK_SHELL_OPT_FUNMODE_FLIGHTMODE_KEEPREG_UICCON,
 	LINK_SHELL_OPT_THRESHOLD_TIME,
 	LINK_SHELL_OPT_START,
 	LINK_SHELL_OPT_STOP,
@@ -410,87 +455,107 @@ enum {
 	LINK_SHELL_OPT_LTEM_PTW,
 	LINK_SHELL_OPT_NBIOT_EDRX,
 	LINK_SHELL_OPT_NBIOT_PTW,
+	LINK_SHELL_OPT_NTN_NBIOT_EDRX,
+	LINK_SHELL_OPT_NTN_NBIOT_PTW,
 	LINK_SHELL_OPT_MODEM_INIT,
 	LINK_SHELL_OPT_MODEM_SHUTDOWN,
 	LINK_SHELL_OPT_MODEM_SHUTDOWN_CFUN0,
+	LINK_SHELL_OPT_MODEM_SYSTEMOFF,
+	LINK_SHELL_OPT_ENVEVAL_EVAL_TYPE,
+	LINK_SHELL_OPT_ENVEVAL_PLMNS,
 };
 
 /* Specifying the expected options (both long and short) */
-static struct option long_options[] = {
-	{ "help", no_argument, 0, 'h' },
-	{ "apn", required_argument, 0, 'a' },
-	{ "cid", required_argument, 0, 'I' },
-	{ "family", required_argument, 0, 'f' },
-	{ "ipaddr", required_argument, 0, 'i' },
-	{ "subscribe", no_argument, 0, 's' },
-	{ "unsubscribe", no_argument, 0, 'u' },
-	{ "read", no_argument, 0, 'r' },
-	{ "write", no_argument, 0, LINK_SHELL_OPT_WRITE },
-	{ "pwroff", no_argument, 0, '0' },
-	{ "normal", no_argument, 0, '1' },
-	{ "flightmode", no_argument, 0, '4' },
-	{ "lteoff", no_argument, 0, LINK_SHELL_OPT_FUNMODE_LTEOFF },
-	{ "lteon", no_argument, 0, LINK_SHELL_OPT_FUNMODE_LTEON },
-	{ "gnssoff", no_argument, 0, LINK_SHELL_OPT_FUNMODE_GNSSOFF },
-	{ "gnsson", no_argument, 0, LINK_SHELL_OPT_FUNMODE_GNSSON },
-	{ "uiccoff", no_argument, 0, LINK_SHELL_OPT_FUNMODE_UICCOFF },
-	{ "uiccon", no_argument, 0, LINK_SHELL_OPT_FUNMODE_UICCON },
-	{ "flightmode_uiccon", no_argument, 0, LINK_SHELL_OPT_FUNMODE_FLIGHTMODE_UICCON },
-	{ "ltem", no_argument, 0, 'm' },
-	{ "nbiot", no_argument, 0, 'n' },
-	{ "gnss", no_argument, 0, 'g' },
-	{ "ltem_gnss", no_argument, 0, 'M' },
-	{ "nbiot_gnss", no_argument, 0, 'N' },
-	{ "enable", no_argument, 0, 'e' },
-	{ "enable_no_rel14", no_argument, 0, LINK_SHELL_OPT_NMODE_NO_REL14 },
-	{ "disable", no_argument, 0, 'd' },
-	{ "ltem_edrx", required_argument, 0, LINK_SHELL_OPT_LTEM_EDRX },
-	{ "ltem_ptw", required_argument, 0, LINK_SHELL_OPT_LTEM_PTW },
-	{ "nbiot_edrx", required_argument, 0, LINK_SHELL_OPT_NBIOT_EDRX },
-	{ "nbiot_ptw", required_argument, 0, LINK_SHELL_OPT_NBIOT_PTW },
-	{ "prot", required_argument, 0, 'A' },
-	{ "pword", required_argument, 0, 'P' },
-	{ "uname", required_argument, 0, 'U' },
-	{ "rptau", required_argument, 0, 'p' },
-	{ "rat", required_argument, 0, 't' },
-	{ "srptau", required_argument, 0, 'P' },
-	{ "srat", required_argument, 0, 'T' },
-	{ "mem1", required_argument, 0, LINK_SHELL_OPT_MEM_SLOT_1 },
-	{ "mem2", required_argument, 0, LINK_SHELL_OPT_MEM_SLOT_2 },
-	{ "mem3", required_argument, 0, LINK_SHELL_OPT_MEM_SLOT_3 },
-	{ "reset", no_argument, 0, LINK_SHELL_OPT_RESET },
-	{ "clear", no_argument, 0, LINK_SHELL_OPT_RESET },
-	{ "mreset_all", no_argument, 0, LINK_SHELL_OPT_MRESET_ALL },
-	{ "mreset_user", no_argument, 0, LINK_SHELL_OPT_MRESET_USER },
-	{ "ltem_nbiot", no_argument, 0, LINK_SHELL_OPT_SYSMODE_LTEM_NBIOT },
-	{ "ltem_nbiot_gnss", no_argument, 0, LINK_SHELL_OPT_SYSMODE_LTEM_NBIOT_GNSS },
-	{ "pref_auto", no_argument, 0, LINK_SHELL_OPT_SYSMODE_PREF_AUTO },
-	{ "pref_ltem", no_argument, 0, LINK_SHELL_OPT_SYSMODE_PREF_LTEM },
-	{ "pref_nbiot", no_argument, 0, LINK_SHELL_OPT_SYSMODE_PREF_NBIOT },
-	{ "pref_ltem_plmn_prio", no_argument, 0, LINK_SHELL_OPT_SYSMODE_PREF_LTEM_PLMN_PRIO },
-	{ "pref_nbiot_plmn_prio", no_argument, 0, LINK_SHELL_OPT_SYSMODE_PREF_NBIOT_PLMN_PRIO },
-	{ "start", no_argument, 0, LINK_SHELL_OPT_START },
-	{ "stop", no_argument, 0, LINK_SHELL_OPT_STOP },
-	{ "cancel", no_argument, 0, LINK_SHELL_OPT_STOP },
-	{ "single", no_argument, 0, LINK_SHELL_OPT_SINGLE },
-	{ "continuous", no_argument, 0, LINK_SHELL_OPT_CONTINUOUS },
-	{ "threshold", required_argument, 0, LINK_SHELL_OPT_THRESHOLD_TIME },
-	{ "interval", required_argument, 0, LINK_SHELL_OPT_NCELLMEAS_CONTINUOUS_INTERVAL_TIME },
-	{ "gci_count", required_argument, 0, LINK_SHELL_OPT_NCELLMEAS_GCI_COUNT },
-	{ "search_type", required_argument, 0, LINK_SHELL_OPT_NCELLMEAS_SEARCH_TYPE },
-	{ "search_cfg", required_argument, 0, LINK_SHELL_OPT_SEARCH_CFG },
-	{ "search_pattern_range", required_argument, 0, LINK_SHELL_OPT_SEARCH_PATTERN_RANGE },
-	{ "search_pattern_table", required_argument, 0, LINK_SHELL_OPT_SEARCH_PATTERN_TABLE },
-	{ "normal_no_rel14", no_argument, 0, LINK_SHELL_OPT_NMODE_NO_REL14 },
-	{ "default", no_argument, 0, LINK_SHELL_OPT_REDMOB_DEFAULT },
-	{ "nordic", no_argument, 0, LINK_SHELL_OPT_REDMOB_NORDIC },
-	{ "init", no_argument, 0, LINK_SHELL_OPT_MODEM_INIT },
-	{ "shutdown", no_argument, 0, LINK_SHELL_OPT_MODEM_SHUTDOWN },
-	{ "shutdown_cfun0", no_argument, 0, LINK_SHELL_OPT_MODEM_SHUTDOWN_CFUN0 },
-	{ 0, 0, 0, 0 }
-};
+static struct sys_getopt_option long_options[] = {
+	{"help", sys_getopt_no_argument, 0, 'h'},
+	{"apn", sys_getopt_required_argument, 0, 'a'},
+	{"cid", sys_getopt_required_argument, 0, 'I'},
+	{"family", sys_getopt_required_argument, 0, 'f'},
+	{"ipaddr", sys_getopt_required_argument, 0, 'i'},
+	{"subscribe", sys_getopt_no_argument, 0, 's'},
+	{"unsubscribe", sys_getopt_no_argument, 0, 'u'},
+	{"read", sys_getopt_no_argument, 0, 'r'},
+	{"write", sys_getopt_no_argument, 0, LINK_SHELL_OPT_WRITE},
+	{"pwroff", sys_getopt_no_argument, 0, '0'},
+	{"normal", sys_getopt_no_argument, 0, '1'},
+	{"rxonly", sys_getopt_no_argument, 0, '2'},
+	{"flightmode", sys_getopt_no_argument, 0, '4'},
+	{"lteoff", sys_getopt_no_argument, 0, LINK_SHELL_OPT_FUNMODE_LTEOFF},
+	{"lteon", sys_getopt_no_argument, 0, LINK_SHELL_OPT_FUNMODE_LTEON},
+	{"gnssoff", sys_getopt_no_argument, 0, LINK_SHELL_OPT_FUNMODE_GNSSOFF},
+	{"gnsson", sys_getopt_no_argument, 0, LINK_SHELL_OPT_FUNMODE_GNSSON},
+	{"uiccoff", sys_getopt_no_argument, 0, LINK_SHELL_OPT_FUNMODE_UICCOFF},
+	{"uiccon", sys_getopt_no_argument, 0, LINK_SHELL_OPT_FUNMODE_UICCON},
+	{"flightmode_uiccon", sys_getopt_no_argument, 0, LINK_SHELL_OPT_FUNMODE_FLIGHTMODE_UICCON},
+	{"flightmode_keepreg", sys_getopt_no_argument, 0,
+	 LINK_SHELL_OPT_FUNMODE_FLIGHTMODE_KEEPREG},
+	{"flightmode_keepreg_uiccon", sys_getopt_no_argument, 0,
+	 LINK_SHELL_OPT_FUNMODE_FLIGHTMODE_KEEPREG_UICCON},
+	{"ltem", sys_getopt_no_argument, 0, 'm'},
+	{"nbiot", sys_getopt_no_argument, 0, 'n'},
+	{"gnss", sys_getopt_no_argument, 0, 'g'},
+	{"ltem_gnss", sys_getopt_no_argument, 0, 'M'},
+	{"nbiot_gnss", sys_getopt_no_argument, 0, 'N'},
+	{"enable", sys_getopt_no_argument, 0, 'e'},
+	{"enable_no_rel14", sys_getopt_no_argument, 0, LINK_SHELL_OPT_NMODE_NO_REL14},
+	{"disable", sys_getopt_no_argument, 0, 'd'},
+	{"ltem_edrx", sys_getopt_required_argument, 0, LINK_SHELL_OPT_LTEM_EDRX},
+	{"ltem_ptw", sys_getopt_required_argument, 0, LINK_SHELL_OPT_LTEM_PTW},
+	{"nbiot_edrx", sys_getopt_required_argument, 0, LINK_SHELL_OPT_NBIOT_EDRX},
+	{"nbiot_ptw", sys_getopt_required_argument, 0, LINK_SHELL_OPT_NBIOT_PTW},
+	{"ntn_nbiot_edrx", sys_getopt_required_argument, 0, LINK_SHELL_OPT_NTN_NBIOT_EDRX},
+	{"ntn_nbiot_ptw", sys_getopt_required_argument, 0, LINK_SHELL_OPT_NTN_NBIOT_PTW},
+	{"prot", sys_getopt_required_argument, 0, 'A'},
+	{"pword", sys_getopt_required_argument, 0, 'P'},
+	{"uname", sys_getopt_required_argument, 0, 'U'},
+	{"rptau", sys_getopt_required_argument, 0, 'p'},
+	{"rat", sys_getopt_required_argument, 0, 't'},
+	{"srptau", sys_getopt_required_argument, 0, 'P'},
+	{"srat", sys_getopt_required_argument, 0, 'T'},
+	{"mem1", sys_getopt_required_argument, 0, LINK_SHELL_OPT_MEM_SLOT_1},
+	{"mem2", sys_getopt_required_argument, 0, LINK_SHELL_OPT_MEM_SLOT_2},
+	{"mem3", sys_getopt_required_argument, 0, LINK_SHELL_OPT_MEM_SLOT_3},
+	{"reset", sys_getopt_no_argument, 0, LINK_SHELL_OPT_RESET},
+	{"clear", sys_getopt_no_argument, 0, LINK_SHELL_OPT_RESET},
+	{"mreset_all", sys_getopt_no_argument, 0, LINK_SHELL_OPT_MRESET_ALL},
+	{"mreset_user", sys_getopt_no_argument, 0, LINK_SHELL_OPT_MRESET_USER},
+	{"ltem_nbiot", sys_getopt_no_argument, 0, LINK_SHELL_OPT_SYSMODE_LTEM_NBIOT},
+	{"ltem_nbiot_gnss", sys_getopt_no_argument, 0, LINK_SHELL_OPT_SYSMODE_LTEM_NBIOT_GNSS},
+	{"ntn", sys_getopt_no_argument, 0, LINK_SHELL_OPT_SYSMODE_NTN},
+	{"pref_auto", sys_getopt_no_argument, 0, LINK_SHELL_OPT_SYSMODE_PREF_AUTO},
+	{"pref_ltem", sys_getopt_no_argument, 0, LINK_SHELL_OPT_SYSMODE_PREF_LTEM},
+	{"pref_nbiot", sys_getopt_no_argument, 0, LINK_SHELL_OPT_SYSMODE_PREF_NBIOT},
+	{"pref_ltem_plmn_prio", sys_getopt_no_argument, 0,
+	 LINK_SHELL_OPT_SYSMODE_PREF_LTEM_PLMN_PRIO},
+	{"pref_nbiot_plmn_prio", sys_getopt_no_argument, 0,
+	 LINK_SHELL_OPT_SYSMODE_PREF_NBIOT_PLMN_PRIO},
+	{"start", sys_getopt_no_argument, 0, LINK_SHELL_OPT_START},
+	{"stop", sys_getopt_no_argument, 0, LINK_SHELL_OPT_STOP},
+	{"cancel", sys_getopt_no_argument, 0, LINK_SHELL_OPT_STOP},
+	{"single", sys_getopt_no_argument, 0, LINK_SHELL_OPT_SINGLE},
+	{"continuous", sys_getopt_no_argument, 0, LINK_SHELL_OPT_CONTINUOUS},
+	{"threshold", sys_getopt_required_argument, 0, LINK_SHELL_OPT_THRESHOLD_TIME},
+	{"interval", sys_getopt_required_argument, 0,
+	 LINK_SHELL_OPT_NCELLMEAS_CONTINUOUS_INTERVAL_TIME},
+	{"gci_count", sys_getopt_required_argument, 0, LINK_SHELL_OPT_NCELLMEAS_GCI_COUNT},
+	{"search_type", sys_getopt_required_argument, 0, LINK_SHELL_OPT_NCELLMEAS_SEARCH_TYPE},
+	{"search_cfg", sys_getopt_required_argument, 0, LINK_SHELL_OPT_SEARCH_CFG},
+	{"search_pattern_range", sys_getopt_required_argument, 0,
+	 LINK_SHELL_OPT_SEARCH_PATTERN_RANGE},
+	{"search_pattern_table", sys_getopt_required_argument, 0,
+	 LINK_SHELL_OPT_SEARCH_PATTERN_TABLE},
+	{"normal_no_rel14", sys_getopt_no_argument, 0, LINK_SHELL_OPT_NMODE_NO_REL14},
+	{"default", sys_getopt_no_argument, 0, LINK_SHELL_OPT_REDMOB_DEFAULT},
+	{"nordic", sys_getopt_no_argument, 0, LINK_SHELL_OPT_REDMOB_NORDIC},
+	{"init", sys_getopt_no_argument, 0, LINK_SHELL_OPT_MODEM_INIT},
+	{"shutdown", sys_getopt_no_argument, 0, LINK_SHELL_OPT_MODEM_SHUTDOWN},
+	{"shutdown_cfun0", sys_getopt_no_argument, 0, LINK_SHELL_OPT_MODEM_SHUTDOWN_CFUN0},
+	{"systemoff", sys_getopt_no_argument, 0, LINK_SHELL_OPT_MODEM_SYSTEMOFF},
+	{"eval_type", sys_getopt_required_argument, 0, LINK_SHELL_OPT_ENVEVAL_EVAL_TYPE},
+	{"plmns", sys_getopt_required_argument, 0, LINK_SHELL_OPT_ENVEVAL_PLMNS},
+	{0, 0, 0, 0}};
 
-static const char short_options[] = "ha:I:f:i:p:t:A:P:T:U:su014rmngMNed";
+static const char short_options[] = "ha:I:f:i:p:t:A:P:T:U:su0124rmngMNed";
 
 bool link_shell_msleep_notifications_subscribed;
 
@@ -506,6 +571,11 @@ static void link_shell_print_usage(enum link_shell_command command)
 	case LINK_CMD_DEFCONTAUTH:
 		mosh_print_no_format(link_defcontauth_usage_str);
 		break;
+#if defined(CONFIG_LTE_LC_ENV_EVAL_MODULE)
+	case LINK_CMD_ENVEVAL:
+		mosh_print_no_format(link_enveval_usage_str);
+		break;
+#endif /* CONFIG_LTE_LC_ENV_EVAL_MODULE */
 	case LINK_CMD_CONNECT:
 		mosh_print_no_format(link_connect_usage_str);
 		break;
@@ -579,9 +649,11 @@ static void link_shell_print_usage(enum link_shell_command command)
 	 LTE_LC_SYSTEM_MODE_LTEM_NBIOT                   :	   \
 	 IS_ENABLED(CONFIG_LTE_NETWORK_MODE_LTE_M_NBIOT_GPS)     ? \
 	 LTE_LC_SYSTEM_MODE_LTEM_NBIOT_GPS               :	   \
+	 IS_ENABLED(CONFIG_LTE_NETWORK_MODE_NTN_NBIOT)           ? \
+	 LTE_LC_SYSTEM_MODE_NTN_NBIOT                    :	   \
 	 LINK_SYSMODE_NONE)
 
-static void link_shell_sysmode_set(int sysmode, int lte_pref)
+static int link_shell_sysmode_set(int sysmode, int lte_pref)
 {
 	enum lte_lc_func_mode functional_mode;
 	char snum[64];
@@ -597,11 +669,15 @@ static void link_shell_sysmode_set(int sysmode, int lte_pref)
 				"Requested mode couldn't set to modem. "
 				"Not in flighmode nor in pwroff?");
 		}
+
+		return -EFAULT;
 	} else {
 		mosh_print(
 			"System mode set successfully to modem: %s",
 			link_shell_sysmode_to_string(sysmode, snum));
 	}
+
+	return 0;
 }
 
 #define MOSH_NCELLMEAS_SEARCH_TYPE_NONE 0xFF
@@ -627,6 +703,25 @@ static enum lte_lc_neighbor_search_type
 
 	return search_type;
 }
+
+#if defined(CONFIG_LTE_LC_ENV_EVAL_MODULE)
+#define MOSH_ENVEVAL_EVAL_TYPE_NONE 0xFF
+
+static enum lte_lc_env_eval_type link_shell_string_to_env_eval_type(const char *eval_type_str)
+{
+	enum lte_lc_env_eval_type eval_type = MOSH_ENVEVAL_EVAL_TYPE_NONE;
+
+	if (strcmp(eval_type_str, "dynamic") == 0) {
+		eval_type = LTE_LC_ENV_EVAL_TYPE_DYNAMIC;
+	} else if (strcmp(eval_type_str, "light") == 0) {
+		eval_type = LTE_LC_ENV_EVAL_TYPE_LIGHT;
+	} else if (strcmp(eval_type_str, "full") == 0) {
+		eval_type = LTE_LC_ENV_EVAL_TYPE_FULL;
+	}
+
+	return eval_type;
+}
+#endif /* CONFIG_LTE_LC_ENV_EVAL_MODULE */
 
 int link_shell_get_and_print_current_system_modes(
 	enum lte_lc_system_mode *sys_mode_current,
@@ -710,49 +805,49 @@ static int link_shell_connect(const struct shell *shell, size_t argc, char **arg
 		goto show_usage;
 	}
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'a': /* APN */
-			apn_len = strlen(optarg);
+			apn_len = strlen(sys_getopt_optarg);
 			if (apn_len > LINK_APN_STR_MAX_LENGTH) {
 				mosh_error(
 					"APN string length %d exceeded. Maximum is %d.",
 					apn_len, LINK_APN_STR_MAX_LENGTH);
 				return -EINVAL;
 			}
-			apn = optarg;
+			apn = sys_getopt_optarg;
 			break;
 		case 'f': /* Address family */
-			family = optarg;
+			family = sys_getopt_optarg;
 			break;
 		case 'i': /* IP address */
-			ip_address = optarg;
+			ip_address = sys_getopt_optarg;
 			break;
 		case 'A': /* auth protocol */
-			protocol = atoi(optarg);
+			protocol = atoi(sys_getopt_optarg);
 			protocol_given = true;
 			break;
 		case 'U': /* auth username */
-			username = optarg;
+			username = sys_getopt_optarg;
 			break;
 		case 'P': /* auth password */
-			password = optarg;
+			password = sys_getopt_optarg;
 			break;
 
 		case 'h':
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -773,7 +868,7 @@ static int link_shell_connect(const struct shell *shell, size_t argc, char **arg
 		mosh_error("When setting authentication, all auth options must be given");
 		goto show_usage;
 	} else {
-		enum pdn_auth method;
+		enum lte_lc_pdn_auth method;
 
 		ret = link_shell_pdn_auth_prot_to_pdn_lib_method_map(
 			protocol, &method);
@@ -806,6 +901,170 @@ static int link_shell_coneval(const struct shell *shell, size_t argc, char **arg
 	return 0;
 }
 
+#if defined(CONFIG_LTE_LC_ENV_EVAL_MODULE)
+static int link_shell_string_to_env_eval_plmn_list(
+	char *plmn_str,
+	struct lte_lc_env_eval_plmn *plmn_list,
+	uint8_t *plmn_count)
+{
+	int ret = 0;
+	size_t plmn_str_len;
+	char *plmn_ptr;
+	uint8_t count = 0;
+
+	__ASSERT_NO_MSG(plmn_str != NULL);
+	__ASSERT_NO_MSG(plmn_list != NULL);
+	__ASSERT_NO_MSG(plmn_count != NULL);
+
+	*plmn_count = 0;
+
+	plmn_str_len = strlen(plmn_str);
+	plmn_ptr = plmn_str;
+
+	/* Replace commas with nul-terminators. */
+	for (int i = 0; i < plmn_str_len; i++) {
+		if (plmn_ptr[i] == ',') {
+			plmn_ptr[i] = '\0';
+		}
+	}
+
+	while (plmn_ptr < (plmn_str + plmn_str_len)) {
+		if (count >= CONFIG_LTE_LC_ENV_EVAL_MAX_PLMN_COUNT) {
+			mosh_error("Number of PLMNs exceeds CONFIG_LTE_LC_ENV_EVAL_MAX_PLMN_COUNT"
+				   " (%d)",
+				   CONFIG_LTE_LC_ENV_EVAL_MAX_PLMN_COUNT);
+			return -EINVAL;
+		}
+
+		if (strlen(plmn_ptr) < 5) {
+			mosh_error("Invalid PLMN: %s", plmn_ptr);
+			return -EBADMSG;
+		}
+
+		/* Read MNC and store as integer. The MNC starts as the fourth character
+		 * in the string, following three characters long MCC.
+		 */
+		ret = mosh_string_to_int(&plmn_ptr[3], 10, &plmn_list[count].mnc);
+		if (ret) {
+			return -EBADMSG;
+		}
+
+		/* Nul-terminate MCC, read and store it. */
+		plmn_ptr[3] = '\0';
+		ret = mosh_string_to_int(&plmn_ptr[0], 10, &plmn_list[count].mcc);
+		if (ret) {
+			return -EBADMSG;
+		}
+
+		if (plmn_list[count].mcc == 0 || plmn_list[count].mnc == 0) {
+			mosh_error("Invalid PLMN: MCC: %03d, MNC: %02d",
+				   plmn_list[count].mcc, plmn_list[count].mnc);
+			return -EBADMSG;
+		}
+
+		count++;
+
+		/* Skip parsed PLMN, which is at least 5 digits. */
+		plmn_ptr += 5;
+
+		if (*plmn_ptr != '\0') {
+			/* Skip 6th digit.*/
+			plmn_ptr++;
+		}
+		/* Skip nul-terminator. */
+		plmn_ptr++;
+	}
+
+	*plmn_count = count;
+
+	return ret;
+}
+
+static int link_shell_enveval(const struct shell *shell, size_t argc, char **argv)
+{
+	int ret;
+	struct lte_lc_env_eval_plmn plmn_list[CONFIG_LTE_LC_ENV_EVAL_MAX_PLMN_COUNT] = {0};
+	struct lte_lc_env_eval_params params = {
+		.eval_type = MOSH_ENVEVAL_EVAL_TYPE_NONE,
+		.plmn_list = plmn_list
+	};
+	bool cancel = false;
+
+	if (argc < 2) {
+		goto show_usage;
+	}
+
+	sys_getopt_init();
+
+	int opt;
+
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+		switch (opt) {
+		case LINK_SHELL_OPT_ENVEVAL_EVAL_TYPE:
+			params.eval_type = link_shell_string_to_env_eval_type(sys_getopt_optarg);
+			if (params.eval_type == MOSH_ENVEVAL_EVAL_TYPE_NONE) {
+				mosh_error("Unknown evaluation type. See usage:");
+				goto show_usage;
+			}
+			break;
+		case LINK_SHELL_OPT_ENVEVAL_PLMNS:
+			ret = link_shell_string_to_env_eval_plmn_list(
+				sys_getopt_optarg, params.plmn_list, &params.plmn_count);
+			if (ret) {
+				mosh_error("Invalid PLMN list. See usage:");
+				goto show_usage;
+			}
+			break;
+		case LINK_SHELL_OPT_STOP:
+			cancel = true;
+			break;
+
+		case 'h':
+			goto show_usage;
+		case '?':
+		default:
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
+			goto show_usage;
+		}
+	}
+
+	if (cancel) {
+		mosh_print("Cancelling environment evaluation...");
+		ret = lte_lc_env_eval_cancel();
+		if (ret) {
+			mosh_error("lte_lc_env_eval_cancel() returned %d", ret);
+			return -ENOEXEC;
+		}
+		return 0;
+	}
+
+	/* Validate that both eval_type and plmns were provided */
+	if (params.eval_type == MOSH_ENVEVAL_EVAL_TYPE_NONE) {
+		mosh_error("Evaluation type must be specified. See usage:");
+		goto show_usage;
+	}
+
+	if (params.plmn_count == 0) {
+		mosh_error("At least one PLMN must be specified. See usage:");
+		goto show_usage;
+	}
+
+	mosh_print("Starting environment evaluation for %zu PLMN(s)...", params.plmn_count);
+
+	ret = lte_lc_env_eval(&params);
+	if (ret) {
+		mosh_error("lte_lc_env_eval() returned %d", ret);
+		return -ENOEXEC;
+	}
+
+	return 0;
+
+show_usage:
+	link_shell_print_usage(LINK_CMD_ENVEVAL);
+	return -EINVAL;
+}
+#endif /* CONFIG_LTE_LC_ENV_EVAL_MODULE */
+
 static int link_shell_defcont(const struct shell *shell, size_t argc, char **argv)
 {
 	int ret = 0;
@@ -814,11 +1073,11 @@ static int link_shell_defcont(const struct shell *shell, size_t argc, char **arg
 	char *apn = NULL;
 	char *family = NULL;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'r':
 		case 'e':
@@ -831,29 +1090,29 @@ static int link_shell_defcont(const struct shell *shell, size_t argc, char **arg
 			break;
 
 		case 'a': /* APN */
-			apn_len = strlen(optarg);
+			apn_len = strlen(sys_getopt_optarg);
 			if (apn_len > LINK_APN_STR_MAX_LENGTH) {
 				mosh_error(
 					"APN string length %d exceeded. Maximum is %d.",
 					apn_len, LINK_APN_STR_MAX_LENGTH);
 				return -EINVAL;
 			}
-			apn = optarg;
+			apn = sys_getopt_optarg;
 			break;
 		case 'f': /* Address family */
-			family = optarg;
+			family = sys_getopt_optarg;
 			break;
 
 		case 'h':
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -878,7 +1137,7 @@ static int link_shell_defcont(const struct shell *shell, size_t argc, char **arg
 		(void)link_sett_save_defcont_apn(apn);
 	}
 	if (family != NULL) {
-		enum pdn_fam pdn_lib_fam;
+		enum lte_lc_pdn_family pdn_lib_fam;
 
 		ret = link_family_str_to_pdn_lib_family(&pdn_lib_fam, family);
 		if (ret) {
@@ -904,11 +1163,11 @@ static int link_shell_defcontauth(const struct shell *shell, size_t argc, char *
 	char *username = NULL;
 	char *password = NULL;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'r':
 		case 'e':
@@ -921,26 +1180,26 @@ static int link_shell_defcontauth(const struct shell *shell, size_t argc, char *
 			break;
 
 		case 'A': /* auth protocol */
-			protocol = atoi(optarg);
+			protocol = atoi(sys_getopt_optarg);
 			protocol_given = true;
 			break;
 		case 'U': /* auth username */
-			username = optarg;
+			username = sys_getopt_optarg;
 			break;
 		case 'P': /* auth password */
-			password = optarg;
+			password = sys_getopt_optarg;
 			break;
 
 		case 'h':
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -983,14 +1242,14 @@ static int link_shell_disconnect(const struct shell *shell, size_t argc, char **
 	int ret = 0;
 	int pdn_cid = 0;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'I': /* PDN CID */
-			pdn_cid = atoi(optarg);
+			pdn_cid = atoi(sys_getopt_optarg);
 			if (pdn_cid <= 0) {
 				mosh_error(
 					"PDN CID (%d) must be positive integer. "
@@ -1004,12 +1263,12 @@ static int link_shell_disconnect(const struct shell *shell, size_t argc, char **
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -1033,11 +1292,11 @@ static int link_shell_dnsaddr(const struct shell *shell, size_t argc, char **arg
 	enum link_shell_operation operation = LINK_OPERATION_NONE;
 	char *ip_address = NULL;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'r':
 		case 'e':
@@ -1050,19 +1309,19 @@ static int link_shell_dnsaddr(const struct shell *shell, size_t argc, char **arg
 			break;
 
 		case 'i':
-			ip_address = optarg;
+			ip_address = sys_getopt_optarg;
 			break;
 
 		case 'h':
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -1117,12 +1376,16 @@ static int link_shell_edrx(const struct shell *shell, size_t argc, char **argv)
 	bool nbiot_edrx_set = false;
 	char nbiot_ptw_str[LINK_SHELL_EDRX_PTW_STR_LENGTH + 1];
 	bool nbiot_ptw_set = false;
+	char ntn_nbiot_edrx_str[LINK_SHELL_EDRX_VALUE_STR_LENGTH + 1];
+	bool ntn_nbiot_edrx_set = false;
+	char ntn_nbiot_ptw_str[LINK_SHELL_EDRX_PTW_STR_LENGTH + 1];
+	bool ntn_nbiot_ptw_set = false;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'r':
 		case 'e':
@@ -1135,8 +1398,8 @@ static int link_shell_edrx(const struct shell *shell, size_t argc, char **argv)
 			break;
 
 		case LINK_SHELL_OPT_LTEM_EDRX:
-			if (strlen(optarg) == LINK_SHELL_EDRX_VALUE_STR_LENGTH) {
-				strcpy(ltem_edrx_str, optarg);
+			if (strlen(sys_getopt_optarg) == LINK_SHELL_EDRX_VALUE_STR_LENGTH) {
+				strcpy(ltem_edrx_str, sys_getopt_optarg);
 				ltem_edrx_set = true;
 			} else {
 				mosh_error(
@@ -1146,8 +1409,8 @@ static int link_shell_edrx(const struct shell *shell, size_t argc, char **argv)
 			}
 			break;
 		case LINK_SHELL_OPT_LTEM_PTW:
-			if (strlen(optarg) == LINK_SHELL_EDRX_PTW_STR_LENGTH) {
-				strcpy(ltem_ptw_str, optarg);
+			if (strlen(sys_getopt_optarg) == LINK_SHELL_EDRX_PTW_STR_LENGTH) {
+				strcpy(ltem_ptw_str, sys_getopt_optarg);
 				ltem_ptw_set = true;
 			} else {
 				mosh_error(
@@ -1157,8 +1420,8 @@ static int link_shell_edrx(const struct shell *shell, size_t argc, char **argv)
 			}
 			break;
 		case LINK_SHELL_OPT_NBIOT_EDRX:
-			if (strlen(optarg) == LINK_SHELL_EDRX_VALUE_STR_LENGTH) {
-				strcpy(nbiot_edrx_str, optarg);
+			if (strlen(sys_getopt_optarg) == LINK_SHELL_EDRX_VALUE_STR_LENGTH) {
+				strcpy(nbiot_edrx_str, sys_getopt_optarg);
 				nbiot_edrx_set = true;
 			} else {
 				mosh_error(
@@ -1168,9 +1431,31 @@ static int link_shell_edrx(const struct shell *shell, size_t argc, char **argv)
 			}
 			break;
 		case LINK_SHELL_OPT_NBIOT_PTW:
-			if (strlen(optarg) == LINK_SHELL_EDRX_PTW_STR_LENGTH) {
-				strcpy(nbiot_ptw_str, optarg);
+			if (strlen(sys_getopt_optarg) == LINK_SHELL_EDRX_PTW_STR_LENGTH) {
+				strcpy(nbiot_ptw_str, sys_getopt_optarg);
 				nbiot_ptw_set = true;
+			} else {
+				mosh_error(
+					"PTW string length must be %d.",
+					LINK_SHELL_EDRX_PTW_STR_LENGTH);
+				return -EINVAL;
+			}
+			break;
+		case LINK_SHELL_OPT_NTN_NBIOT_EDRX:
+			if (strlen(sys_getopt_optarg) == LINK_SHELL_EDRX_VALUE_STR_LENGTH) {
+				strcpy(ntn_nbiot_edrx_str, sys_getopt_optarg);
+				ntn_nbiot_edrx_set = true;
+			} else {
+				mosh_error(
+					"eDRX value string length must be %d.",
+					LINK_SHELL_EDRX_VALUE_STR_LENGTH);
+				return -EINVAL;
+			}
+			break;
+		case LINK_SHELL_OPT_NTN_NBIOT_PTW:
+			if (strlen(sys_getopt_optarg) == LINK_SHELL_EDRX_PTW_STR_LENGTH) {
+				strcpy(ntn_nbiot_ptw_str, sys_getopt_optarg);
+				ntn_nbiot_ptw_set = true;
 			} else {
 				mosh_error(
 					"PTW string length must be %d.",
@@ -1183,12 +1468,12 @@ static int link_shell_edrx(const struct shell *shell, size_t argc, char **argv)
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -1251,6 +1536,34 @@ static int link_shell_edrx(const struct shell *shell, size_t argc, char **argv)
 			return -EINVAL;
 		}
 
+		value = NULL; /* Set with the defaults if not given */
+		if (ntn_nbiot_edrx_set) {
+			value = ntn_nbiot_edrx_str;
+		}
+
+		ret = lte_lc_edrx_param_set(LTE_LC_LTE_MODE_NTN_NBIOT, value);
+		if (ret < 0) {
+			mosh_error(
+				"Cannot set NTN NB-IoT eDRX value %s, error: %d",
+				((value == NULL) ? "NULL" : value),
+				ret);
+			return -EINVAL;
+		}
+
+		value = NULL; /* Set with the defaults if not given */
+		if (ntn_nbiot_ptw_set) {
+			value = ntn_nbiot_ptw_str;
+		}
+
+		ret = lte_lc_ptw_set(LTE_LC_LTE_MODE_NTN_NBIOT, value);
+		if (ret < 0) {
+			mosh_error(
+				"Cannot set NTN NB-IoT PTW value %s, error: %d",
+				((value == NULL) ? "NULL" : value),
+				ret);
+			return -EINVAL;
+		}
+
 		ret = lte_lc_edrx_req(true);
 		if (ret < 0) {
 			mosh_error("Cannot enable eDRX: %d", ret);
@@ -1275,8 +1588,9 @@ static int link_shell_edrx(const struct shell *shell, size_t argc, char **argv)
 				mosh_print("eDRX not in use");
 			} else {
 				mosh_print("eDRX LTE mode: %s, eDRX interval: %.2f s, PTW: %.2f s",
-					   edrx_cfg.mode == LTE_LC_LTE_MODE_LTEM ?
-						"LTE-M" : "NB-IoT",
+					   (edrx_cfg.mode == LTE_LC_LTE_MODE_LTEM)  ? "LTE-M" :
+					   (edrx_cfg.mode == LTE_LC_LTE_MODE_NBIOT) ? "NB-IoT" :
+										      "NTN NB-IoT",
 					   (double)edrx_cfg.edrx, (double)edrx_cfg.ptw);
 			}
 		}
@@ -1300,11 +1614,11 @@ static int link_shell_funmode(const struct shell *shell, size_t argc, char **arg
 	enum link_shell_operation operation = LINK_OPERATION_NONE;
 	char snum[64];
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		/* This condition prevents accidentally using two functional modes */
 		if (funmode_option != LINK_FUNMODE_NONE) {
 			mosh_error("Use only one option when setting functional mode");
@@ -1324,6 +1638,9 @@ static int link_shell_funmode(const struct shell *shell, size_t argc, char **arg
 			break;
 		case '1':
 			funmode_option = LTE_LC_FUNC_MODE_NORMAL;
+			break;
+		case '2':
+			funmode_option = LTE_LC_FUNC_MODE_RX_ONLY;
 			break;
 		case '4':
 			funmode_option = LTE_LC_FUNC_MODE_OFFLINE;
@@ -1349,6 +1666,12 @@ static int link_shell_funmode(const struct shell *shell, size_t argc, char **arg
 		case LINK_SHELL_OPT_FUNMODE_FLIGHTMODE_UICCON:
 			funmode_option = LTE_LC_FUNC_MODE_OFFLINE_UICC_ON;
 			break;
+		case LINK_SHELL_OPT_FUNMODE_FLIGHTMODE_KEEPREG:
+			funmode_option = LTE_LC_FUNC_MODE_OFFLINE_KEEP_REG;
+			break;
+		case LINK_SHELL_OPT_FUNMODE_FLIGHTMODE_KEEPREG_UICCON:
+			funmode_option = LTE_LC_FUNC_MODE_OFFLINE_KEEP_REG_UICC_ON;
+			break;
 		case LINK_SHELL_OPT_NMODE_NO_REL14:
 			funmode_option = LTE_LC_FUNC_MODE_NORMAL;
 			nmode_use_rel14 = false;
@@ -1358,12 +1681,12 @@ static int link_shell_funmode(const struct shell *shell, size_t argc, char **arg
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -1401,11 +1724,11 @@ static int link_shell_modem(const struct shell *shell, size_t argc, char **argv)
 {
 	bool operation_selected = false;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case LINK_SHELL_OPT_MODEM_INIT:
 			operation_selected = true;
@@ -1424,17 +1747,29 @@ static int link_shell_modem(const struct shell *shell, size_t argc, char **argv)
 			nrf_modem_at_printf("AT+CFUN=0");
 			nrf_modem_lib_shutdown();
 			break;
+		case LINK_SHELL_OPT_MODEM_SYSTEMOFF:
+			operation_selected = true;
+#if defined(CONFIG_POWEROFF)
+			nrf_modem_at_printf("AT+CFUN=0");
+			nrf_modem_lib_shutdown();
+			printk("Entering SYSTEMOFF in 1 second, wakeup only with reset\n");
+			k_sleep(K_SECONDS(1));
+			sys_poweroff();
+#else
+			mosh_error("Enable CONFIG_POWEROFF for SYSTEMOFF support");
+#endif
+			break;
 
 		case 'h':
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -1455,11 +1790,11 @@ static int link_shell_msleep(const struct shell *shell, size_t argc, char **argv
 	enum link_shell_operation operation = LINK_OPERATION_NONE;
 	int threshold_time = 0;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 's':
 		case 'u':
@@ -1471,7 +1806,7 @@ static int link_shell_msleep(const struct shell *shell, size_t argc, char **argv
 			break;
 
 		case LINK_SHELL_OPT_THRESHOLD_TIME:
-			threshold_time = atoi(optarg);
+			threshold_time = atoi(sys_getopt_optarg);
 			if (threshold_time <= 0) {
 				mosh_error(
 					"Not a valid number for --threshold_time (milliseconds).");
@@ -1483,12 +1818,12 @@ static int link_shell_msleep(const struct shell *shell, size_t argc, char **argv
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -1526,11 +1861,11 @@ static int link_shell_ncellmeas(const struct shell *shell, size_t argc, char **a
 	bool periodic_time_given = false;
 	int gci_count;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case LINK_SHELL_OPT_STOP:
 			operation = LINK_OPERATION_STOP;
@@ -1543,14 +1878,15 @@ static int link_shell_ncellmeas(const struct shell *shell, size_t argc, char **a
 			ncellmeasmode = LINK_NCELLMEAS_MODE_CONTINUOUS;
 			break;
 		case LINK_SHELL_OPT_NCELLMEAS_SEARCH_TYPE:
-			ncellmeas_search_type = link_shell_string_to_ncellmeas_search_type(optarg);
+			ncellmeas_search_type =
+				link_shell_string_to_ncellmeas_search_type(sys_getopt_optarg);
 			if (ncellmeas_search_type == MOSH_NCELLMEAS_SEARCH_TYPE_NONE) {
 				mosh_error("Unknown search_type. See usage:");
 				goto show_usage;
 			}
 			break;
 		case LINK_SHELL_OPT_NCELLMEAS_GCI_COUNT:
-			gci_count = atoi(optarg);
+			gci_count = atoi(sys_getopt_optarg);
 			if (gci_count <= 0) {
 				mosh_error("Not a valid number for --gci_count.");
 				return -EINVAL;
@@ -1560,8 +1896,8 @@ static int link_shell_ncellmeas(const struct shell *shell, size_t argc, char **a
 		case LINK_SHELL_OPT_NCELLMEAS_CONTINUOUS_INTERVAL_TIME: {
 			char *end_ptr;
 
-			periodic_time = strtol(optarg, &end_ptr, 10);
-			if (end_ptr == optarg || periodic_time < 0) {
+			periodic_time = strtol(sys_getopt_optarg, &end_ptr, 10);
+			if (end_ptr == sys_getopt_optarg || periodic_time < 0) {
 				mosh_error("Not a valid number for --interval (seconds).");
 				return -EINVAL;
 			}
@@ -1573,12 +1909,12 @@ static int link_shell_ncellmeas(const struct shell *shell, size_t argc, char **a
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -1608,25 +1944,25 @@ static int link_shell_nmodeat(const struct shell *shell, size_t argc, char **arg
 	char *normal_mode_at_str = NULL;
 	uint8_t normal_mode_at_mem_slot = 0;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'r':
 			operation = LINK_OPERATION_READ;
 			break;
 		case LINK_SHELL_OPT_MEM_SLOT_1:
-			normal_mode_at_str = optarg;
+			normal_mode_at_str = sys_getopt_optarg;
 			normal_mode_at_mem_slot = 1;
 			break;
 		case LINK_SHELL_OPT_MEM_SLOT_2:
-			normal_mode_at_str = optarg;
+			normal_mode_at_str = sys_getopt_optarg;
 			normal_mode_at_mem_slot = 2;
 			break;
 		case LINK_SHELL_OPT_MEM_SLOT_3:
-			normal_mode_at_str = optarg;
+			normal_mode_at_str = sys_getopt_optarg;
 			normal_mode_at_mem_slot = 3;
 			break;
 
@@ -1634,12 +1970,12 @@ static int link_shell_nmodeat(const struct shell *shell, size_t argc, char **arg
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -1675,11 +2011,11 @@ static int link_shell_nmodeauto(const struct shell *shell, size_t argc, char **a
 	enum link_shell_operation operation = LINK_OPERATION_NONE;
 	bool nmode_use_rel14 = true;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'r':
 		case 'e':
@@ -1700,12 +2036,12 @@ static int link_shell_nmodeauto(const struct shell *shell, size_t argc, char **a
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -1732,11 +2068,11 @@ static int link_shell_propripsm(const struct shell *shell, size_t argc, char **a
 	int err;
 	enum link_shell_operation operation = LINK_OPERATION_NONE;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'r':
 		case 'e':
@@ -1748,12 +2084,12 @@ static int link_shell_propripsm(const struct shell *shell, size_t argc, char **a
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -1798,11 +2134,11 @@ static int link_shell_psm(const struct shell *shell, size_t argc, char **argv)
 	int psm_rat_seconds = 0;
 	bool psm_rat_seconds_set = false;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'r':
 		case 'e':
@@ -1815,9 +2151,9 @@ static int link_shell_psm(const struct shell *shell, size_t argc, char **argv)
 			break;
 
 		case 'p': /* rptau */
-			if (strlen(optarg) ==
+			if (strlen(sys_getopt_optarg) ==
 			    LINK_SHELL_PSM_PARAM_STR_LENGTH) {
-				strcpy(psm_rptau_bit_str, optarg);
+				strcpy(psm_rptau_bit_str, sys_getopt_optarg);
 				psm_rptau_bit_str_set = true;
 			} else {
 				mosh_error(
@@ -1827,9 +2163,9 @@ static int link_shell_psm(const struct shell *shell, size_t argc, char **argv)
 			}
 			break;
 		case 't': /* rat */
-			if (strlen(optarg) ==
+			if (strlen(sys_getopt_optarg) ==
 			    LINK_SHELL_PSM_PARAM_STR_LENGTH) {
-				strcpy(psm_rat_bit_str, optarg);
+				strcpy(psm_rat_bit_str, sys_getopt_optarg);
 				psm_rat_bit_str_set = true;
 			} else {
 				mosh_error(
@@ -1840,11 +2176,11 @@ static int link_shell_psm(const struct shell *shell, size_t argc, char **argv)
 			break;
 
 		case 'P': /* rptau in seconds */
-			psm_rptau_seconds = atoi(optarg);
+			psm_rptau_seconds = atoi(sys_getopt_optarg);
 			psm_rptau_seconds_set = true;
 			break;
 		case 'T': /* rat in seconds */
-			psm_rat_seconds = atoi(optarg);
+			psm_rat_seconds = atoi(sys_getopt_optarg);
 			psm_rat_seconds_set = true;
 			break;
 
@@ -1852,12 +2188,12 @@ static int link_shell_psm(const struct shell *shell, size_t argc, char **argv)
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -1947,11 +2283,11 @@ static int link_shell_rai(const struct shell *shell, size_t argc, char **argv)
 {
 	enum link_shell_operation operation = LINK_OPERATION_NONE;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'r':
 		case 'e':
@@ -1967,12 +2303,12 @@ static int link_shell_rai(const struct shell *shell, size_t argc, char **argv)
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -2001,11 +2337,11 @@ static int link_shell_redmob(const struct shell *shell, size_t argc, char **argv
 	enum link_reduced_mobility_mode redmob_mode = LINK_REDUCED_MOBILITY_NONE;
 	char snum[10];
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'r':
 		case 'd':
@@ -2027,12 +2363,12 @@ static int link_shell_redmob(const struct shell *shell, size_t argc, char **argv
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -2077,11 +2413,11 @@ static int link_shell_rsrp(const struct shell *shell, size_t argc, char **argv)
 {
 	enum link_shell_operation operation = LINK_OPERATION_NONE;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 's':
 		case 'u':
@@ -2096,12 +2432,12 @@ static int link_shell_rsrp(const struct shell *shell, size_t argc, char **argv)
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -2128,11 +2464,11 @@ static int link_shell_search(const struct shell *shell, size_t argc, char **argv
 	struct lte_lc_periodic_search_cfg search_cfg = { 0 };
 	bool search_cfg_given = false;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'r':
 		case LINK_SHELL_OPT_START:
@@ -2151,7 +2487,7 @@ static int link_shell_search(const struct shell *shell, size_t argc, char **argv
 			int loop_integer = 0;
 
 			ret = sscanf(
-				optarg,
+				sys_getopt_optarg,
 				"%d,%hd,%hd",
 				&loop_integer,
 				&search_cfg.return_to_pattern,
@@ -2182,7 +2518,7 @@ static int link_shell_search(const struct shell *shell, size_t argc, char **argv
 			int index = search_cfg.pattern_count;
 
 			ret = sscanf(
-				optarg,
+				sys_getopt_optarg,
 				"%hd,%hd,%hd,%hd",
 				&search_cfg.patterns[index].range.initial_sleep,
 				&search_cfg.patterns[index].range.final_sleep,
@@ -2211,7 +2547,7 @@ static int link_shell_search(const struct shell *shell, size_t argc, char **argv
 			search_cfg.patterns[index].table.val_5 = -1;
 
 			ret = sscanf(
-				optarg,
+				sys_getopt_optarg,
 				"%d,%d,%d,%d,%d",
 				&search_cfg.patterns[index].table.val_1,
 				&search_cfg.patterns[index].table.val_2,
@@ -2237,12 +2573,12 @@ static int link_shell_search(const struct shell *shell, size_t argc, char **argv
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -2358,11 +2694,11 @@ static int link_shell_settings(const struct shell *shell, size_t argc, char **ar
 	enum link_shell_operation operation = LINK_OPERATION_NONE;
 	enum link_factory_reset_type mreset_type = LINK_FACTORY_RESET_INVALID;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'r':
 		case LINK_SHELL_OPT_RESET:
@@ -2384,12 +2720,12 @@ static int link_shell_settings(const struct shell *shell, size_t argc, char **ar
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -2401,8 +2737,8 @@ static int link_shell_settings(const struct shell *shell, size_t argc, char **ar
 		if (operation == LINK_OPERATION_RESET) {
 			link_sett_defaults_set();
 			if (SYS_MODE_PREFERRED != LINK_SYSMODE_NONE) {
-				link_shell_sysmode_set(SYS_MODE_PREFERRED,
-						       CONFIG_LTE_MODE_PREFERENCE_VALUE);
+				(void)link_shell_sysmode_set(SYS_MODE_PREFERRED,
+							     CONFIG_LTE_MODE_PREFERENCE_VALUE);
 			}
 		}
 		if (mreset_type == LINK_FACTORY_RESET_ALL) {
@@ -2459,11 +2795,11 @@ static int link_shell_sysmode(const struct shell *shell, size_t argc, char **arg
 	enum lte_lc_system_mode_preference sysmode_lte_pref_option = LTE_LC_SYSTEM_MODE_PREFER_AUTO;
 	enum link_shell_operation operation = LINK_OPERATION_NONE;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'r':
 		case LINK_SHELL_OPT_RESET:
@@ -2495,6 +2831,9 @@ static int link_shell_sysmode(const struct shell *shell, size_t argc, char **arg
 		case LINK_SHELL_OPT_SYSMODE_LTEM_NBIOT_GNSS:
 			sysmode_option = LTE_LC_SYSTEM_MODE_LTEM_NBIOT_GPS;
 			break;
+		case LINK_SHELL_OPT_SYSMODE_NTN:
+			sysmode_option = LTE_LC_SYSTEM_MODE_NTN_NBIOT;
+			break;
 		case LINK_SHELL_OPT_SYSMODE_PREF_AUTO:
 			sysmode_lte_pref_option = LTE_LC_SYSTEM_MODE_PREFER_AUTO;
 			break;
@@ -2515,12 +2854,12 @@ static int link_shell_sysmode(const struct shell *shell, size_t argc, char **arg
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -2554,15 +2893,15 @@ static int link_shell_sysmode(const struct shell *shell, size_t argc, char **arg
 			}
 		}
 	} else if (sysmode_option != LINK_SYSMODE_NONE) {
-		link_shell_sysmode_set(sysmode_option, sysmode_lte_pref_option);
-
-		/* Save system modem to link settings */
-		(void)link_sett_sysmode_save(sysmode_option, sysmode_lte_pref_option);
-
+		ret = link_shell_sysmode_set(sysmode_option, sysmode_lte_pref_option);
+		if (ret == 0) {
+			/* Save system modem to link settings */
+			(void)link_sett_sysmode_save(sysmode_option, sysmode_lte_pref_option);
+		}
 	} else if (operation == LINK_OPERATION_RESET) {
 		if (SYS_MODE_PREFERRED != LINK_SYSMODE_NONE) {
-			link_shell_sysmode_set(SYS_MODE_PREFERRED,
-					       CONFIG_LTE_MODE_PREFERENCE_VALUE);
+			(void)link_shell_sysmode_set(SYS_MODE_PREFERRED,
+						     CONFIG_LTE_MODE_PREFERENCE_VALUE);
 		}
 
 		(void)link_sett_sysmode_default_set();
@@ -2582,11 +2921,11 @@ static int link_shell_tau(const struct shell *shell, size_t argc, char **argv)
 	enum link_shell_operation operation = LINK_OPERATION_NONE;
 	int threshold_time = 0;
 
-	optreset = 1;
-	optind = 1;
+	sys_getopt_init();
+
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+	while ((opt = sys_getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (opt) {
 		case 's':
 		case 'u':
@@ -2594,7 +2933,7 @@ static int link_shell_tau(const struct shell *shell, size_t argc, char **argv)
 			break;
 
 		case LINK_SHELL_OPT_THRESHOLD_TIME:
-			threshold_time = atoi(optarg);
+			threshold_time = atoi(sys_getopt_optarg);
 			if (threshold_time <= 0) {
 				mosh_error(
 					"Not a valid number for --threshold_time (milliseconds).");
@@ -2606,12 +2945,12 @@ static int link_shell_tau(const struct shell *shell, size_t argc, char **argv)
 			goto show_usage;
 		case '?':
 		default:
-			mosh_error("Unknown option (%s). See usage:", argv[optind - 1]);
+			mosh_error("Unknown option (%s). See usage:", argv[sys_getopt_optind - 1]);
 			goto show_usage;
 		}
 	}
 
-	if (optind < argc) {
+	if (sys_getopt_optind < argc) {
 		mosh_error("Arguments without '-' not supported: %s", argv[argc - 1]);
 		goto show_usage;
 	}
@@ -2674,6 +3013,12 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 		edrx, NULL,
 		"Enable/disable eDRX with default or with custom parameters.",
 		link_shell_edrx, 0, 10),
+#if defined(CONFIG_LTE_LC_ENV_EVAL_MODULE)
+	SHELL_CMD_ARG(
+		enveval, NULL,
+		"Perform environment evaluation for specified PLMNs.",
+		link_shell_enveval, 0, 20),
+#endif /* CONFIG_LTE_LC_ENV_EVAL_MODULE */
 	SHELL_CMD_ARG(
 		funmode, NULL,
 		"Set/read functional modes of the modem.",

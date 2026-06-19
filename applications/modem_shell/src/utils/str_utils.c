@@ -108,6 +108,9 @@ void agnss_data_flags_str_get(char *flags_string, uint32_t data_flags)
 	if (data_flags & NRF_MODEM_GNSS_AGNSS_INTEGRITY_REQUEST) {
 		(void)strcat(flags_string, "int | ");
 	}
+	if (data_flags & NRF_MODEM_GNSS_AGNSS_GGTO_REQUEST) {
+		(void)strcat(flags_string, "ggto | ");
+	}
 
 	len = strlen(flags_string);
 	if (len == 0) {
@@ -129,7 +132,30 @@ const char *gnss_system_str_get(uint8_t system_id)
 	case NRF_MODEM_GNSS_SYSTEM_QZSS:
 		return "QZSS";
 
+	case NRF_MODEM_GNSS_SYSTEM_GAL:
+		return "GAL";
+
 	default:
 		return "unknown";
 	}
+}
+
+int mosh_string_to_int(const char *str_buf, int base, int *output)
+{
+	int temp;
+	char *end_ptr;
+
+	__ASSERT_NO_MSG(str_buf != NULL);
+
+	errno = 0;
+	temp = strtol(str_buf, &end_ptr, base);
+
+	if (end_ptr == str_buf || *end_ptr != '\0' ||
+	    ((temp == LONG_MAX || temp == LONG_MIN) && errno == ERANGE)) {
+		return -ENODATA;
+	}
+
+	*output = temp;
+
+	return 0;
 }

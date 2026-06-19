@@ -7,19 +7,15 @@
 #include <zephyr/shell/shell.h>
 #include <assert.h>
 #include <stdio.h>
-#if defined(CONFIG_POSIX_API)
 #include <unistd.h>
 #include <netdb.h>
 #include <poll.h>
 #include <sys/socket.h>
 #include <zephyr/sys/fdtable.h>
-#else
-#include <zephyr/net/socket.h>
-#endif
 #include <zephyr/net/tls_credentials.h>
 #include <fcntl.h>
 #include <nrf_socket.h>
-#include <modem/pdn.h>
+#include <modem/lte_lc.h>
 
 #include "sock.h"
 #include "mosh_defines.h"
@@ -31,14 +27,15 @@
 extern struct k_poll_signal mosh_signal;
 extern struct k_work_q mosh_common_work_q;
 
-/* Maximum number of sockets takes into account AT command socket */
-#define MAX_SOCKETS (CONFIG_POSIX_OPEN_MAX - 1)
+/* Maximum number of sockets */
+#define MAX_SOCKETS CONFIG_ZVFS_OPEN_ADD_SIZE_NRF_MODEM
 #define SOCK_SEND_BUFFER_SIZE_UDP 1200
 /* This should be multiple of TCP window size (708) to make it more efficient */
 #define SOCK_SEND_BUFFER_SIZE_TCP 3540
 #define SOCK_RECEIVE_BUFFER_SIZE 1536
 #define SOCK_RECEIVE_STACK_SIZE 1280
 #define SOCK_RECEIVE_PRIORITY 5
+#define SOCK_OPT_VALUE_LIST_SIZE 20
 /* Timeout (in ms) for polling socket events such as receive data,
  * permission to send more, disconnected socket etc.
  * This limits how quickly data can be received after socket creation.
@@ -331,7 +328,7 @@ static int sock_getaddrinfo_req(
 		char *service = NULL;
 
 		if (pdn_cid > 0) {
-			snprintf(pdn_serv, sizeof(pdn_serv), "%d", pdn_id_get(pdn_cid));
+			snprintf(pdn_serv, sizeof(pdn_serv), "%d", lte_lc_pdn_id_get(pdn_cid));
 			service = pdn_serv;
 			hints.ai_flags = AI_PDNSERV;
 		}
@@ -354,7 +351,9 @@ static int sock_set_tls_options(
 	uint32_t sec_tag,
 	bool session_cache,
 	int peer_verify,
-	char *peer_hostname)
+	char *peer_hostname,
+	int dtls_cid,
+	int dtls_frag_ext)
 {
 	int err;
 	uint32_t sec_tag_list[] = { sec_tag };
@@ -409,6 +408,27 @@ static int sock_set_tls_options(
 			return errno;
 		}
 	}
+
+	/* DTLS CID */
+	if (dtls_cid != TLS_DTLS_CID_STATUS_DISABLED) {
+		err = setsockopt(fd, SOL_TLS, TLS_DTLS_CID, &dtls_cid, sizeof(dtls_cid));
+		if (err) {
+			mosh_error("Unable to set DTLS CID option, errno %d", errno);
+			return errno;
+		}
+	}
+
+	/* DTLS fragmentation extension */
+	if (dtls_frag_ext != DTLS_FRAG_EXT_DISABLED) {
+		err = setsockopt(fd, SOL_TLS, TLS_DTLS_FRAG_EXT, &dtls_frag_ext,
+				 sizeof(dtls_frag_ext));
+		if (err) {
+			mosh_error("Unable to set DTLS fragmentation extension option, errno %d",
+				   errno);
+			return errno;
+		}
+	}
+
 	return 0;
 }
 
@@ -529,7 +549,9 @@ int sock_open_and_connect(
 	bool session_cache,
 	bool keep_open,
 	int peer_verify,
-	char *peer_hostname)
+	char *peer_hostname,
+	int dtls_cid,
+	int dtls_frag_ext)
 {
 	int err = -EINVAL;
 	int proto = 0;
@@ -540,8 +562,9 @@ int sock_open_and_connect(
 		   family, type, port, bind_port, pdn_cid, address);
 	if (secure) {
 		mosh_print("                        secure=%d, sec_tag=%u, session_cache=%d, "
-			   "peer_verify=%d, peer_hostname=%s",
-			   secure, sec_tag, session_cache, peer_verify, peer_hostname);
+			   "peer_verify=%d, peer_hostname=%s, dtls_cid=%d, dtls_frag_ext=%d",
+			   secure, sec_tag, session_cache, peer_verify, peer_hostname, dtls_cid,
+			   dtls_frag_ext);
 	}
 
 	/* Reserve socket ID and structure for a new connection */
@@ -549,7 +572,7 @@ int sock_open_and_connect(
 
 	if (socket_info == NULL) {
 		mosh_error("Socket creation failed. MAX_SOCKETS=%d exceeded", MAX_SOCKETS);
-		goto connect_error;
+		return -ENFILE;
 	}
 
 	/* Validate parameters */
@@ -632,7 +655,8 @@ int sock_open_and_connect(
 
 	/* Set (D)TLS options */
 	if (secure) {
-		err = sock_set_tls_options(fd, sec_tag, session_cache, peer_verify, peer_hostname);
+		err = sock_set_tls_options(fd, sec_tag, session_cache, peer_verify,
+					   peer_hostname, dtls_cid, dtls_frag_ext);
 		if (err) {
 			goto connect_error;
 		}
@@ -736,7 +760,7 @@ static int sock_send(
 	}
 
 	if (socket_info->send_info.packet_number_prefix > 0) {
-		if (socket_info->send_info.packet_number_prefix == 10000) {
+		if (socket_info->send_info.packet_number_prefix >= 10000) {
 			socket_info->send_info.packet_number_prefix = 1;
 		}
 		sprintf(packet_number_prefix_str,
@@ -1303,6 +1327,245 @@ int sock_rai(int socket_id, bool rai_last, bool rai_no_data,
 	}
 
 	return 0;
+}
+
+int sock_setopt(int socket_id, int sock_level, int sock_opt_id, char *sock_opt_value)
+{
+	struct sock_info *socket_info = get_socket_info_by_id(socket_id);
+	int err;
+	char *end;
+
+	if (socket_info == NULL) {
+		return -EINVAL;
+	}
+
+	if (sock_opt_id == 0) {
+		mosh_error("Socket option is mandatory.");
+		return -EINVAL;
+	}
+
+	if (sock_opt_value == NULL &&
+	    !(sock_level == SOL_TLS && sock_opt_id == TLS_HOSTNAME) &&
+	    !(sock_level == SOL_TLS && sock_opt_id == TLS_SESSION_CACHE_PURGE)) {
+		mosh_error("Socket option value is mandatory.");
+		return -EINVAL;
+	}
+
+	switch (sock_level) {
+	case SOL_TLS:
+		switch (sock_opt_id) {
+		case TLS_SEC_TAG_LIST:
+		case TLS_CIPHERSUITE_LIST:
+			/* Value is a comma separated list of integers or hexadecimals, for example
+			 * "42,43,44" or "0xC024,0xC00A,0xC023".
+			 */
+			int value_list[SOCK_OPT_VALUE_LIST_SIZE];
+			unsigned int value_count = 0;
+
+			for (int i = 0; i < strlen(sock_opt_value); i++) {
+				if (sock_opt_value[i] == ',') {
+					sock_opt_value[i] = ' ';
+				}
+			}
+
+			while (value_count < ARRAY_SIZE(value_list)) {
+				int value = strtoul(sock_opt_value, &end, 0);
+
+				if (end == sock_opt_value) {
+					break;
+				}
+				value_list[value_count++] = value;
+				sock_opt_value = end;
+			}
+
+			err = setsockopt(socket_info->fd, sock_level, sock_opt_id, value_list,
+					 value_count * sizeof(int));
+			goto exit;
+
+		case TLS_HOSTNAME:
+			/* Value can be empty to clear hostname. */
+			size_t hostname_len;
+
+			if (sock_opt_value == NULL) {
+				hostname_len = 0;
+			} else {
+				hostname_len = strlen(sock_opt_value);
+			}
+			err = setsockopt(socket_info->fd, sock_level, sock_opt_id, sock_opt_value,
+					 hostname_len);
+			goto exit;
+
+		case TLS_SESSION_CACHE_PURGE:
+			/* No value used for this option. */
+			err = setsockopt(socket_info->fd, sock_level, sock_opt_id, NULL, 0);
+			goto exit;
+
+		default:
+			break;
+		}
+		break; /* SOL_TLS */
+
+	case SOL_SOCKET:
+		switch (sock_opt_id) {
+		case SO_RCVTIMEO:
+		case SO_SNDTIMEO:
+			/* Value is in milliseconds and needs to be converted into
+			 * a timeval structure.
+			 */
+			int timeout_us;
+			struct timeval tv;
+
+			timeout_us = atoi(sock_opt_value) * USEC_PER_MSEC;
+			tv.tv_sec = timeout_us / USEC_PER_SEC;
+			tv.tv_usec = timeout_us % USEC_PER_SEC;
+			err = setsockopt(socket_info->fd, sock_level, sock_opt_id, &tv,
+				sizeof(tv));
+			goto exit;
+
+		default:
+			break;
+		}
+		break; /* SOL_SOCKET */
+
+	default:
+		break;
+	}
+
+	/* All other values are integers. */
+	int sock_opt_value_int;
+
+	sock_opt_value_int = atoi(sock_opt_value);
+	err = setsockopt(socket_info->fd, sock_level, sock_opt_id, &sock_opt_value_int,
+				sizeof(sock_opt_value_int));
+
+exit:
+	if (err) {
+		mosh_error("setsockopt() for level=%d, option=%d, value=%s failed with error %d",
+			   sock_level, sock_opt_id, sock_opt_value, errno);
+	}
+
+	return err;
+}
+
+int sock_getopt(int socket_id, int sock_level, int sock_opt_id)
+{
+	struct sock_info *socket_info = get_socket_info_by_id(socket_id);
+	int err;
+	int sock_opt_value = 0;
+	int sock_opt_value_len = sizeof(sock_opt_value);
+
+	if (socket_info == NULL) {
+		return -EINVAL;
+	}
+
+	switch (sock_level) {
+	case SOL_TLS:
+		switch (sock_opt_id) {
+		case TLS_SEC_TAG_LIST:
+		case TLS_CIPHERSUITE_LIST:
+			/* Value is a list of sec_tags or ciphersuites. */
+			int value_list[SOCK_OPT_VALUE_LIST_SIZE];
+			unsigned int value_list_size = sizeof(value_list);
+
+			err = getsockopt(socket_info->fd, sock_level, sock_opt_id, value_list,
+					&value_list_size);
+			if (!err) {
+				char value_str[128] = { 0 };
+				size_t value_str_len = 0;
+
+				for (unsigned int i = 0; i < value_list_size / sizeof(int); i++) {
+					if (sock_opt_id == TLS_SEC_TAG_LIST) {
+						value_str_len +=
+							snprintf(value_str + value_str_len,
+								 sizeof(value_str) - value_str_len,
+								 "%d,", value_list[i]);
+					} else {
+						value_str_len +=
+							snprintf(value_str + value_str_len,
+								 sizeof(value_str) - value_str_len,
+								 "0x%X,", value_list[i]);
+					}
+					if (value_str_len >= sizeof(value_str) - 1) {
+						break;
+					}
+				}
+
+				if (value_str_len > 0 && value_str_len <= sizeof(value_str)) {
+					if (value_str[value_str_len - 1] == ',') {
+						value_str[value_str_len - 1] = '\0';
+					}
+				}
+
+				mosh_print(
+					"getsockopt() socket_id=%d, level=%d, option=%d, value=%s",
+					socket_id, sock_level, sock_opt_id, value_str);
+			}
+			goto exit;
+
+		case TLS_HOSTNAME:
+			/* Value is a string. */
+			char hostname[64] = { 0 };
+			size_t hostname_len = sizeof(hostname) - 1;
+
+			err = getsockopt(socket_info->fd, sock_level, sock_opt_id,
+					 hostname, &hostname_len);
+			if (!err) {
+				mosh_print(
+					"getsockopt() socket_id=%d, level=%d, option=%d, value=%s",
+					socket_id, sock_level, sock_opt_id, hostname);
+			}
+			goto exit;
+
+		default:
+			break;
+		}
+		break; /* SOL_TLS */
+
+	case SOL_SOCKET:
+		switch (sock_opt_id) {
+		case SO_RCVTIMEO:
+		case SO_SNDTIMEO:
+			/* Value is a timeval structure. */
+			struct timeval tv;
+			size_t tv_len = sizeof(tv);
+
+			err = getsockopt(socket_info->fd, sock_level, sock_opt_id, &tv, &tv_len);
+			if (!err) {
+				int timeout_ms = tv.tv_sec * MSEC_PER_SEC +
+						 tv.tv_usec / USEC_PER_MSEC;
+				mosh_print(
+					"getsockopt() socket_id=%d, level=%d, option=%d, "
+					"value=%d ms",
+					socket_id, sock_level, sock_opt_id, timeout_ms);
+			}
+			goto exit;
+
+		default:
+			break;
+		}
+		break; /* SOL_SOCKET */
+
+	default:
+		break;
+	}
+
+	/* All other values are integers. */
+	err = getsockopt(socket_info->fd, sock_level, sock_opt_id, &sock_opt_value,
+			 &sock_opt_value_len);
+	if (!err) {
+		mosh_print(
+			"getsockopt() socket_id=%d, level=%d, option=%d, value=%d",
+			socket_id, sock_level, sock_opt_id, sock_opt_value);
+	}
+
+exit:
+	if (err) {
+		mosh_error(
+			"getsockopt() socket_id=%d, level=%d, option=%d failed with error %d",
+			socket_id, sock_level, sock_opt_id, errno);
+	}
+
+	return err;
 }
 
 int sock_list(void)

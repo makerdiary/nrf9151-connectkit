@@ -8,6 +8,7 @@
 #define MOSH_SOCK_H
 
 #define SOCK_ID_NONE -1
+#define SOCK_OPT_SOL_NONE -1
 #define SOCK_RAI_NONE -1
 #define SOCK_BUFFER_SIZE_NONE -1
 #define SOCK_SEND_DATA_INTERVAL_NONE -1
@@ -26,7 +27,7 @@ int sock_open_and_connect(
 	int family, int type, char *address, int port,
 	int bind_port, int pdn_cid, bool secure, uint32_t sec_tag,
 	bool session_cache, bool keep_open, int peer_verify,
-	char *peer_hostname);
+	char *peer_hostname, int dtls_cid, int dtls_frag_ext);
 
 int sock_send_data(
 	int socket_id, char *data, int data_length, int interval, bool packet_number_prefix,
@@ -40,6 +41,8 @@ int sock_close(int socket_id);
 int sock_rai(
 	int socket_id, bool rai_last, bool rai_no_data, bool rai_one_resp,
 	bool rai_ongoing, bool rai_wait_more);
+int sock_setopt(int socket_id, int sock_level, int sock_opt_id, char *sock_opt_value);
+int sock_getopt(int socket_id, int sock_level, int sock_opt_id);
 int sock_list(void);
 
 #endif /* MOSH_SOCK_H */

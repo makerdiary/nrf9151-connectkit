@@ -37,11 +37,6 @@ static void gpio_handler(const struct device *port, struct gpio_callback *cb, gp
 	value = gpio_pin_get(gpio_dev, gpio_pin);
 	if (value) {
 		gpio_pulse_count++;
-#if defined(CONFIG_DK_LIBRARY) && !defined(CONFIG_BOARD_THINGY91_NRF9160_NS)
-		dk_set_led_on(GPIO_STATUS_LED);
-	} else {
-		dk_set_led_off(GPIO_STATUS_LED);
-#endif
 	}
 }
 

@@ -21,6 +21,8 @@
 extern char mosh_at_resp_buf[MOSH_AT_CMD_RESPONSE_MAX_LEN];
 extern struct k_mutex mosh_at_resp_buf_mutex;
 
+#define CREDENTIALS_CMD "AT%CMNG=0"
+
 AT_MONITOR(mosh_at_handler, ANY, at_cmd_handler, PAUSED);
 
 #if defined(CONFIG_MOSH_AT_CMD_MODE)
@@ -39,6 +41,16 @@ static int at_shell_cmd_mode_enable_autostart(const struct shell *shell, size_t 
 static int at_shell_cmd_mode_disable_autostart(const struct shell *shell, size_t argc, char **argv)
 {
 	at_cmd_mode_sett_autostart_enabled(false);
+	return 0;
+}
+static int at_shell_cmd_mode_enable_echo(const struct shell *shell, size_t argc, char **argv)
+{
+	at_cmd_mode_sett_echo_on(true, true);
+	return 0;
+}
+static int at_shell_cmd_mode_disable_echo(const struct shell *shell, size_t argc, char **argv)
+{
+	at_cmd_mode_sett_echo_on(false, true);
 	return 0;
 }
 static int at_shell_cmd_mode_term_cr_lf(const struct shell *shell, size_t argc, char **argv)
@@ -87,6 +99,19 @@ static int cmd_at(const struct shell *shell, size_t argc, char **argv)
 		shell_help(shell);
 	} else {
 		k_mutex_lock(&mosh_at_resp_buf_mutex, K_FOREVER);
+
+		/* For the AT%CMNG command, convert '\\n' to '\r\n'
+		 * to allow writing of multi-line certificates.
+		 */
+		if (strncmp(argv[1], CREDENTIALS_CMD, strlen(CREDENTIALS_CMD)) == 0) {
+			char *c = argv[1];
+
+			while ((c = strstr(c, "\\n")) != NULL) {
+				c[0] = '\r';
+				c[1] = '\n';
+			}
+		}
+
 		err = nrf_modem_at_cmd(mosh_at_resp_buf, sizeof(mosh_at_resp_buf), "%s", argv[1]);
 		if (err == 0) {
 			mosh_print("%s", mosh_at_resp_buf);
@@ -115,6 +140,12 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	SHELL_CMD(disable_autostart, NULL,
 		  "Disable AT command mode autostart on bootup.",
 		  at_shell_cmd_mode_disable_autostart),
+	SHELL_CMD(echo_on, NULL,
+		  "Enable echo in AT command mode.",
+		  at_shell_cmd_mode_enable_echo),
+	SHELL_CMD(echo_off, NULL,
+		  "Disable echo in AT command mode.",
+		  at_shell_cmd_mode_disable_echo),
 	SHELL_CMD(term_cr_lf, NULL,
 		  "Receive CR+LF as command line termination.",
 		  at_shell_cmd_mode_term_cr_lf),

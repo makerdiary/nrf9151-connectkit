@@ -21,7 +21,6 @@
 #include <zephyr/shell/shell.h>
 
 #include <modem/modem_info.h>
-#include <modem/pdn.h>
 
 #include <zephyr/posix/arpa/inet.h>
 #include <zephyr/net/net_ip.h>
@@ -295,7 +294,9 @@ static void link_api_modem_operator_info_read_for_shell(void)
 	int ret = link_api_xmonitor_read(&xmonitor_resp);
 
 	if (ret) {
-		mosh_error("link_api_xmonitor_read failed, result: ret %d", ret);
+		/* Reading the information fails if modem is no longer registered, but
+		 * don't want to print an error in this case.
+		 */
 		return;
 	}
 
@@ -348,8 +349,9 @@ static void link_api_modem_operator_info_read_for_shell(void)
 
 static int link_api_pdp_context_dynamic_params_get(struct pdp_context_info *populated_info)
 {
-	struct pdn_dynamic_info pdn_dynamic_info;
-	const int ret = pdn_dynamic_info_get(populated_info->cid, &pdn_dynamic_info);
+	struct lte_lc_pdn_dynamic_info pdn_dynamic_info;
+	const int ret = lte_lc_pdn_dynamic_info_get(populated_info->cid,
+						    &pdn_dynamic_info);
 
 	populated_info->ipv4_mtu = pdn_dynamic_info.ipv4_mtu;
 	populated_info->ipv6_mtu = pdn_dynamic_info.ipv6_mtu;
@@ -404,6 +406,10 @@ int link_api_pdp_contexts_read(struct pdp_context_info_array *pdp_info)
 	pdp_info->array = calloc(pdp_cnt, sizeof(struct pdp_context_info));
 	pdp_info->size = pdp_cnt;
 
+	if (pdp_cnt == 0) {
+		goto clean_exit;
+	}
+
 	/* Parse the response */
 	ret = at_parser_init(&parser, at_ptr);
 	if (ret) {
@@ -421,7 +427,7 @@ parse:
 		mosh_error("Could not parse CID, err: %d", ret);
 		goto clean_exit;
 	}
-	ret = pdn_id_get(populated_info[iterator].cid);
+	ret = lte_lc_pdn_id_get(populated_info[iterator].cid);
 	if (ret < 0) {
 		mosh_error(
 			"Could not get PDN for CID %d, err: %d\n",
@@ -562,7 +568,7 @@ void link_api_modem_info_get_for_shell(bool connected)
 
 	/* Get the device id used with nRF Cloud */
 #if defined(CONFIG_NRF_CLOUD_AGNSS) || defined(CONFIG_NRF_CLOUD_PGPS) || \
-	defined(CONFIG_NRF_CLOUD_MQTT) || defined(CONFIG_NRF_CLOUD_REST)
+	defined(CONFIG_NRF_CLOUD_MQTT) || defined(CONFIG_NRF_CLOUD_COAP)
 	ret = nrf_cloud_client_id_get(device_id, sizeof(device_id));
 #else
 	ret = -ENOTSUP;

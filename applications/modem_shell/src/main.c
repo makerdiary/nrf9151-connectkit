@@ -132,6 +132,19 @@ static const char *modem_crash_reason_get(uint32_t reason)
 	}
 }
 
+static void modem_crash_work_fn(struct k_work *work)
+{
+	mosh_error("Modem crash detected, halting application execution");
+
+#if defined(CONFIG_NRF_MODEM_LIB_TRACE)
+	nrf_modem_lib_trace_processing_done_wait(K_SECONDS(5));
+#endif
+
+	k_oops();
+}
+
+K_WORK_DEFINE(modem_crash_work, modem_crash_work_fn);
+
 void nrf_modem_fault_handler(struct nrf_modem_fault_info *fault_info)
 {
 	printk("Modem crash reason: 0x%x (%s), PC: 0x%x\n",
@@ -139,7 +152,7 @@ void nrf_modem_fault_handler(struct nrf_modem_fault_info *fault_info)
 		modem_crash_reason_get(fault_info->reason),
 		fault_info->program_counter);
 
-	__ASSERT(false, "Modem crash detected, halting application execution");
+	k_work_submit(&modem_crash_work);
 }
 
 #if defined(CONFIG_NRF_MODEM_LIB_SHELL_TRACE)
@@ -250,8 +263,7 @@ int main(void)
 		mosh_print_reset_reason();
 	}
 
-#if defined(CONFIG_NRF_CLOUD_REST) || defined(CONFIG_NRF_CLOUD_MQTT) || \
-	defined(CONFIG_NRF_CLOUD_COAP)
+#if defined(CONFIG_NRF_CLOUD_MQTT) || defined(CONFIG_NRF_CLOUD_COAP)
 #if defined(CONFIG_MOSH_IPERF3)
 	/* Due to iperf3, we cannot let nrf cloud lib to initialize cJSON lib to be
 	 * using kernel heap allocations (i.e. k_ prepending functions).
@@ -323,10 +335,6 @@ int main(void)
 	err = dk_buttons_init(button_handler);
 	if (err) {
 		printk("Failed to initialize DK buttons library, error: %d\n", err);
-	}
-	err = dk_leds_init();
-	if (err) {
-		printk("Cannot initialize LEDs (err: %d)\n", err);
 	}
 #endif
 	/* Application started successfully, mark image as OK to prevent
