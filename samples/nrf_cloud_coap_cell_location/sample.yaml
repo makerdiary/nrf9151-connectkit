@@ -1,0 +1,8 @@
+sample:
+  name: nRF Cloud CoAP cellular location
+tests:
+  sample.nrf_cloud_coap_cell_location:
+    sysbuild: true
+    build_only: true
+    integration_platforms:
+      - nrf9151_connectkit/nrf9151/ns
