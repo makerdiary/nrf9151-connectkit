@@ -23,6 +23,7 @@ name: Documentation
 on:
   push:
     paths:
+      - '.github/workflows/documentation.yml'
       - 'mkdocs.yml'
       - 'scripts/requirements-docs.txt'
       - 'docs/**'
@@ -33,37 +34,32 @@ env:
 
 permissions:
   contents: write
-  id-token: write
-  pages: write
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Configure Git Credentials
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - name: Set up build cache
-        uses: actions/cache/restore@v4
+      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV 
+      - uses: actions/cache@v4
         with:
-          key: mkdocs-material-${{ hashfiles('.cache/**') }}
-          path: .cache
+          key: mkdocs-material-${{ env.cache_id }}
+          path: ~/.cache 
           restore-keys: |
             mkdocs-material-
       - name: Install Python dependencies
         run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install wheel
-          python3 -m pip install -r scripts/requirements-docs.txt
+          pip install -r scripts/requirements-docs.txt
       - name: Build site
         run: mkdocs build
       - name: Deploy documentation
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GOOGLE_ANALYTICS_KEY: ${{ vars.GOOGLE_ANALYTICS_KEY }}
         run: |
           mkdocs --version
