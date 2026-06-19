@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2025 Makerdiary <https://makerdiary.com>
+# Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
 # SPDX-License-Identifier: Apache-2.0
 
 if(CONFIG_BOARD_NRF9151_CONNECTKIT_NRF9151 OR CONFIG_BOARD_NRF9151_CONNECTKIT_NRF9151_NS)

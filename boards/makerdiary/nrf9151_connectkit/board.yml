@@ -1,8 +1,9 @@
 board:
   name: nrf9151_connectkit
+  full_name: nRF9151 Connect Kit
   vendor: makerdiary
   socs:
-    - name: nrf52820
-    - name: nrf9151
-      variants:
-        - name: 'ns'
+  - name: nrf52820
+  - name: nrf9151
+    variants:
+    - name: 'ns'

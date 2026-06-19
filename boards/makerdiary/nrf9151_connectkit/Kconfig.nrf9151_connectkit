@@ -1,6 +1,6 @@
 # nRF9151 Connect Kit board configuration
 
-# Copyright (c) 2016-2025 Makerdiary <https://makerdiary.com>
+# Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
 # SPDX-License-Identifier: Apache-2.0
 
 config BOARD_NRF9151_CONNECTKIT

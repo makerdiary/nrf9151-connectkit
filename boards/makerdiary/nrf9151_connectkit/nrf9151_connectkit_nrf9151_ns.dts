@@ -1,17 +1,18 @@
 /*
- * Copyright (c) 2016-2025 Makerdiary <https://makerdiary.com>
+ * Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 /dts-v1/;
-#include <nordic/nrf9151ns_laca.dtsi>
+#include <arm/nordic/nrf9151_ns_laca.dtsi>
 #include "nrf9151_connectkit_nrf9151_common.dtsi"
 
 / {
 	chosen {
 		zephyr,flash = &flash0;
-		zephyr,sram = &sram0_ns;
+		zephyr,sram = &sram0_ns_app;
 		zephyr,code-partition = &slot0_ns_partition;
 	};
 };
+
