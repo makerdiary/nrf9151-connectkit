@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2022 Nordic Semiconductor ASA
- * Copyright (c) 2016-2025, Makerdiary
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */

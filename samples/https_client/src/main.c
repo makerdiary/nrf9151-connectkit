@@ -33,7 +33,7 @@
 #define HTTP_HDR_END		"\r\n\r\n"
 
 #define RECV_BUF_SIZE		2048
-#define TLS_SEC_TAG			42
+#define TLS_SEC_TAG		42
 
 /* Macros used to subscribe to specific Zephyr NET management events. */
 #define L4_EVENT_MASK		(NET_EVENT_L4_CONNECTED | NET_EVENT_L4_DISCONNECTED)
@@ -44,7 +44,7 @@ static char recv_buf[RECV_BUF_SIZE];
 static K_SEM_DEFINE(network_connected_sem, 0, 1);
 /* Certificate for `example.com` */
 static const char cert[] = {
-	#include "DigiCertGlobalRootG3.pem.inc"
+	#include "example_com_ca.pem.inc"
 
 	/* Null terminate certificate if running Mbed TLS on the application core.
 	 * Required by TLS credentials API.
@@ -177,7 +177,7 @@ static void on_net_event_l4_connected(void)
 }
 
 static void l4_event_handler(struct net_mgmt_event_callback *cb,
-			     uint32_t event,
+			     uint64_t event,
 			     struct net_if *iface)
 {
 	switch (event) {
@@ -195,7 +195,7 @@ static void l4_event_handler(struct net_mgmt_event_callback *cb,
 }
 
 static void connectivity_event_handler(struct net_mgmt_event_callback *cb,
-				       uint32_t event,
+				       uint64_t event,
 				       struct net_if *iface)
 {
 	if (event == NET_EVENT_CONN_IF_FATAL_ERROR) {

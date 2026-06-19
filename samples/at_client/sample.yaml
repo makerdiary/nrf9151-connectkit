@@ -1,5 +1,6 @@
 sample:
-  name: AT client sample
+  name: AT Client sample
+  description: AT Client sample for cellular devices
 tests:
   sample.at_client:
     sysbuild: true

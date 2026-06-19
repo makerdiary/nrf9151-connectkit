@@ -1,6 +1,6 @@
 #
 # Copyright (c) 2019 Nordic Semiconductor
-# Copyright (c) 2016-2025, Makerdiary
+# Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
 #
 # SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
 #

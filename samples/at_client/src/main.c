@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Nordic Semiconductor ASA
- * Copyright (c) 2016-2025, Makerdiary
+ * Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
@@ -13,6 +13,7 @@
 #include <zephyr/drivers/clock_control.h>
 #include <zephyr/drivers/clock_control/nrf_clock_control.h>
 
+#if defined(CONFIG_CLOCK_CONTROL_NRF)
 /* To strictly comply with UART timing, enable external XTAL oscillator */
 void enable_xtal(void)
 {
@@ -23,6 +24,7 @@ void enable_xtal(void)
 	sys_notify_init_spinwait(&cli.notify);
 	(void)onoff_request(clk_mgr, &cli);
 }
+#endif /* CONFIG_CLOCK_CONTROL_NRF */
 
 int main(void)
 {
@@ -35,7 +37,11 @@ int main(void)
 		printk("Modem library initialization failed, error: %d\n", err);
 		return 0;
 	}
+
+#if defined(CONFIG_CLOCK_CONTROL_NRF)
 	enable_xtal();
+#endif /* CONFIG_CLOCK_CONTROL_NRF */
+
 	printk("Ready\n");
 
 	return 0;

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020 Libre Solar Technologies GmbH
- * Copyright (c) 2016-2025, Makerdiary
+ * Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */

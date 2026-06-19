@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2023 Nordic Semiconductor ASA
- * Copyright (c) 2016-2025, Makerdiary
+ * Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
@@ -8,9 +8,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <zephyr/kernel.h>
+#include <netdb.h>
 #include <zephyr/logging/log.h>
-#include <zephyr/net/socket.h>
 #include <modem/at_monitor.h>
 #include <modem/lte_lc.h>
 #include <modem/modem_battery.h>

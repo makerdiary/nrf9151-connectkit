@@ -1,8 +1,0 @@
-sample:
-  name: TLS Ciphersuites sample
-tests:
-  sample.ciphersuites:
-    sysbuild: true
-    build_only: true
-    integration_platforms:
-      - nrf9151_connectkit/nrf9151/ns

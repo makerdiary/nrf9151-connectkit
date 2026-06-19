@@ -1,4 +1,4 @@
-menu "Battery sample"
+menu "Modem battery sample"
 
 config HIGH_BAT_REFRESH_INTERVAL_SEC
 	int "Refresh interval (sec) while battery voltage is high"
@@ -17,8 +17,8 @@ endmenu
 menu "Zephyr Kernel"
 source "Kconfig.zephyr"
 
-module = BATTERY_SAMPLE
-module-str = Battery sample
-source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"
+module = MODEM_BATTERY
+module-str = Modem battery sample
+source "$(ZEPHYR_BASE)/subsys/logging/Kconfig.template.log_config"
 
 endmenu

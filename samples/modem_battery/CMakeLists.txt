@@ -1,6 +1,6 @@
 #
 # Copyright (c) 2023 Nordic Semiconductor
-# Copyright (c) 2016-2025, Makerdiary
+# Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
 #
 # SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
 #
@@ -8,7 +8,7 @@
 cmake_minimum_required(VERSION 3.20.0)
 
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
-project(battery)
+project(modem_battery)
 
 # NORDIC SDK APP START
 target_sources(app PRIVATE src/main.c)

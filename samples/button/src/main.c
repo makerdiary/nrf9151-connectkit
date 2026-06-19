@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016 Open-RnD Sp. z o.o.
  * Copyright (c) 2020 Nordic Semiconductor ASA
- * Copyright (c) 2016-2025, Makerdiary
+ * Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */

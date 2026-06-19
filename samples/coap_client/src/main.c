@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019 Nordic Semiconductor ASA
- * Copyright (c) 2016-2025, Makerdiary
+ # Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
@@ -33,6 +33,8 @@ LOG_MODULE_REGISTER(coap_client_sample, CONFIG_COAP_CLIENT_SAMPLE_LOG_LEVEL);
 /* Macros used to subscribe to specific Zephyr NET management events. */
 #define L4_EVENT_MASK (NET_EVENT_L4_CONNECTED | NET_EVENT_L4_DISCONNECTED)
 #define CONN_LAYER_EVENT_MASK (NET_EVENT_CONN_IF_FATAL_ERROR)
+
+#define MAX_CONSECUTIVE_BUSY_RETRIES 5
 
 /* Macro called upon a fatal error, reboots the device. */
 #define FATAL_ERROR()					\
@@ -101,19 +103,20 @@ static void wait_for_network(void)
 	k_mutex_unlock(&network_connected_lock);
 }
 
-static void response_cb(int16_t code, size_t offset, const uint8_t *payload,
-			size_t len, bool last_block, void *user_data)
+static void response_cb(const struct coap_client_response_data *data, void *user_data)
 {
-	if (code >= 0) {
-		LOG_INF("CoAP response: code: 0x%x, payload: %s", code, payload);
+	if (data->result_code >= 0) {
+		LOG_INF("CoAP response: code: 0x%x, payload: %s",
+			data->result_code, data->payload);
 	} else {
-		LOG_INF("Response received with error code: %d", code);
+		LOG_INF("Response received with error code: %d", data->result_code);
 	}
 }
 
 static int periodic_coap_request_loop(void)
 {
 	int err, sock;
+	int consecutive_busy_retries = 0;
 	struct sockaddr_storage server = { 0 };
 	struct coap_client coap_client = { 0 };
 	struct coap_client_request req = {
@@ -152,9 +155,24 @@ static int periodic_coap_request_loop(void)
 		/* Send request */
 		err = coap_client_req(&coap_client, sock, (struct sockaddr *)&server, &req, NULL);
 		if (err) {
+			if (err == -EAGAIN) {
+				consecutive_busy_retries++;
+				if (consecutive_busy_retries >= MAX_CONSECUTIVE_BUSY_RETRIES) {
+					LOG_ERR("CoAP client busy after %d consecutive retries",
+						consecutive_busy_retries);
+					return err;
+				}
+
+				LOG_WRN("CoAP client busy, retrying later");
+				k_sleep(K_SECONDS(CONFIG_COAP_SAMPLE_REQUEST_INTERVAL_SECONDS));
+				continue;
+			}
+
 			LOG_ERR("Failed to send request: %d", err);
 			return err;
 		}
+
+		consecutive_busy_retries = 0;
 
 		LOG_INF("CoAP GET request sent sent to %s, resource: %s",
 			CONFIG_COAP_SAMPLE_SERVER_HOSTNAME, CONFIG_COAP_SAMPLE_RESOURCE);
@@ -164,7 +182,7 @@ static int periodic_coap_request_loop(void)
 }
 
 static void l4_event_handler(struct net_mgmt_event_callback *cb,
-			     uint32_t event,
+			     uint64_t event,
 			     struct net_if *iface)
 {
 	switch (event) {
@@ -187,7 +205,7 @@ static void l4_event_handler(struct net_mgmt_event_callback *cb,
 	}
 }
 static void connectivity_event_handler(struct net_mgmt_event_callback *cb,
-						uint32_t event,
+						uint64_t event,
 						struct net_if *iface)
 {
 	if (event == NET_EVENT_CONN_IF_FATAL_ERROR) {
