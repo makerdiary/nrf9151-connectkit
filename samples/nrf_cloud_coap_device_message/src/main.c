@@ -1,0 +1,286 @@
+/*
+ * Copyright (c) 2025 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ */
+
+#include <zephyr/kernel.h>
+#include <modem/nrf_modem_lib.h>
+#include <nrf_modem_at.h>
+#include <modem/modem_info.h>
+#include <zephyr/settings/settings.h>
+#include <zephyr/net/conn_mgr_connectivity.h>
+#include <helpers/nrfx_reset_reason.h>
+#include <net/nrf_cloud.h>
+#include <net/nrf_cloud_defs.h>
+#include <net/nrf_cloud_coap.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/logging/log_ctrl.h>
+#include <date_time.h>
+#include <zephyr/random/random.h>
+#include <app_version.h>
+#include <dk_buttons_and_leds.h>
+
+LOG_MODULE_REGISTER(nrf_cloud_coap_device_message,
+		    CONFIG_NRF_CLOUD_COAP_DEVICE_MESSAGE_SAMPLE_LOG_LEVEL);
+
+/* Boot message */
+#define SAMPLE_SIGNON_FMT "nRF Cloud CoAP Device Message Sample, version: %s"
+
+/* Example message */
+#define SAMPLE_MSG_FMT	"{\"sample_message\":"\
+				"\"Hello World, from the CoAP Device Message Sample! "\
+				"Message ID: %lld\"}"
+#define SAMPLE_MSG_BUF_SIZE (sizeof(SAMPLE_MSG_FMT) + 19)
+
+/* Network states */
+#define NETWORK_UP		  BIT(0)
+#define EVENT_MASK		  (NET_EVENT_L4_CONNECTED | NET_EVENT_L4_DISCONNECTED)
+
+/* Event to indicate a button has been pressed */
+static K_EVENT_DEFINE(button_press_event);
+#define BUTTON_PRESSED BIT(0)
+
+/* Connection event */
+static K_EVENT_DEFINE(connection_events);
+
+/* nRF Cloud device ID */
+static char device_id[NRF_CLOUD_CLIENT_ID_MAX_LEN + 1];
+
+static bool cred_check(struct nrf_cloud_credentials_status *const cs)
+{
+	int ret = 0;
+
+	ret = nrf_cloud_credentials_check(cs);
+	if (ret) {
+		LOG_ERR("nRF Cloud credentials check failed, error: %d", ret);
+		return false;
+	}
+
+	/* Since this is a CoAP sample, we only need two credentials:
+	 *  - a CA for the TLS connections
+	 *  - a private key to sign the JWT
+	 */
+
+	if (!cs->ca || !cs->ca_aws || !cs->prv_key) {
+		LOG_WRN("Missing required nRF Cloud credential(s) in sec tag %u:", cs->sec_tag);
+	}
+	if (!cs->ca || !cs->ca_aws) {
+		LOG_WRN("\t-CA Cert");
+	}
+	if (!cs->prv_key) {
+		LOG_WRN("\t-Private Key");
+	}
+
+	return (cs->ca && cs->ca_aws && cs->prv_key);
+}
+
+static void await_credentials(void)
+{
+	struct nrf_cloud_credentials_status cs;
+
+	while (!cred_check(&cs)) {
+		LOG_INF("Waiting for credentials to be installed...");
+		LOG_INF("Press the reset button once the credentials are installed");
+		k_sleep(K_FOREVER);
+	}
+
+	LOG_INF("nRF Cloud credentials detected!");
+}
+
+static void button_handler(uint32_t button_states, uint32_t has_changed)
+{
+	if (has_changed & button_states & DK_BTN1_MSK) {
+		k_event_post(&button_press_event, BUTTON_PRESSED);
+	}
+}
+
+static int send_message(const char *const msg)
+{
+	int ret = 0;
+
+	LOG_INF("Sending message:'%s'", msg);
+
+	/* Send the message to nRF Cloud */
+	ret = nrf_cloud_coap_json_message_send(msg, false, true);
+	if (ret) {
+		LOG_ERR("Failed to send device message via CoAP: %d", ret);
+	} else {
+		LOG_INF("Message sent");
+	}
+
+	return ret;
+}
+
+static void send_message_on_button(void)
+{
+	static unsigned int count;
+
+	/* Wait for a button press */
+	k_event_wait(&button_press_event, BUTTON_PRESSED, true, K_FOREVER);
+
+	(void)send_message("{\"appId\":\"BUTTON\", \"messageType\":\"DATA\", \"data\":\"1\"}");
+
+	LOG_INF("Button pressed %u times", ++count);
+}
+
+static void print_reset_reason(void)
+{
+	int reset_reason = 0;
+
+	reset_reason = nrfx_reset_reason_get();
+	nrfx_reset_reason_clear(reset_reason);
+	LOG_INF("Reset reason: 0x%x", reset_reason);
+}
+
+static int send_hello_world_msg(void)
+{
+	int err = 0;
+	int64_t time_now = 0;
+	char buf[SAMPLE_MSG_BUF_SIZE];
+
+	/* Get the current timestamp */
+	err = date_time_now(&time_now);
+	if (err) {
+		LOG_ERR("Failed to get timestamp, using random number");
+		sys_rand_get(&time_now, sizeof(time_now));
+	}
+
+	/* Send off a hello world message! */
+	err = snprintk(buf, SAMPLE_MSG_BUF_SIZE, SAMPLE_MSG_FMT, time_now);
+	if (err < 0 || err > SAMPLE_MSG_BUF_SIZE) {
+		LOG_ERR("Failed to create Hello World message.");
+		return err;
+	}
+
+	err = send_message(buf);
+	if (err) {
+		LOG_ERR("Failed to send Hello World message");
+	} else {
+		LOG_INF("Sent Hello World message with ID: %lld", time_now);
+	}
+
+	return err;
+}
+
+static void modem_time_wait(void)
+{
+	int err = 0;
+	char time_buf[64];
+
+	LOG_INF("Waiting for modem to acquire network time...");
+
+	do {
+		k_sleep(K_SECONDS(3));
+
+		err = nrf_modem_at_cmd(time_buf, sizeof(time_buf), "AT%%CCLK?");
+		if (err) {
+			LOG_DBG("AT Clock Command Error %d... Retrying in 3 seconds.", err);
+		}
+	} while (err != 0);
+
+	LOG_INF("Network time obtained");
+}
+
+
+static int setup(void)
+{
+	int err = 0;
+
+	print_reset_reason();
+
+	err = dk_buttons_init(button_handler);
+	if (err) {
+		LOG_ERR("dk_buttons_init, error: %d", err);
+	}
+
+	/* Init modem */
+	err = nrf_modem_lib_init();
+	if (err) {
+		LOG_ERR("Failed to initialize modem library: 0x%X", err);
+		return -EFAULT;
+	}
+
+	/* Ensure device has credentials installed before proceeding */
+	await_credentials();
+
+	/* Get the device ID */
+	err = nrf_cloud_client_id_get(device_id, sizeof(device_id));
+	if (err) {
+		LOG_ERR("Failed to get device ID, error: %d", err);
+		return err;
+	}
+
+	/* Initiate Connection */
+	LOG_INF("Enabling connectivity...");
+	conn_mgr_all_if_connect(true);
+	k_event_wait(&connection_events, NETWORK_UP, false, K_FOREVER);
+
+	/* Wait until we know what time it is (necessary for JSON Web Token generation) */
+	modem_time_wait();
+
+	/* nRF Cloud CoAP requires login */
+	err = nrf_cloud_coap_init();
+	if (err) {
+		LOG_ERR("Failed to initialize CoAP client: %d", err);
+		return err;
+	}
+	err = nrf_cloud_coap_connect(NULL);
+	if (err) {
+		LOG_ERR("Connecting to nRF Cloud failed, error: %d", err);
+		return 0;
+	}
+
+	return 0;
+}
+
+/* Callback to track network connectivity */
+static struct net_mgmt_event_callback l4_callback;
+static void l4_event_handler(struct net_mgmt_event_callback *cb, uint64_t event,
+			     struct net_if *iface)
+{
+	if ((event & EVENT_MASK) != event) {
+		return;
+	}
+
+	if (event == NET_EVENT_L4_CONNECTED) {
+		/* Mark network as up. */
+		LOG_INF("Connected to LTE");
+		k_event_post(&connection_events, NETWORK_UP);
+	}
+
+	if (event == NET_EVENT_L4_DISCONNECTED) {
+		/* Mark network as down. */
+		LOG_INF("Network connectivity lost!");
+	}
+}
+
+/* Start tracking network availability */
+static int prepare_network_tracking(void)
+{
+	net_mgmt_init_event_callback(&l4_callback, l4_event_handler, EVENT_MASK);
+	net_mgmt_add_event_callback(&l4_callback);
+
+	return 0;
+}
+
+SYS_INIT(prepare_network_tracking, APPLICATION, 0);
+
+int main(void)
+{
+	int err = 0;
+
+	LOG_INF(SAMPLE_SIGNON_FMT, APP_VERSION_STRING);
+
+	err = setup();
+	if (err) {
+		LOG_ERR("Setup failed, stopping.");
+		return 0;
+	}
+
+	err = send_hello_world_msg();
+
+	while (1) {
+		send_message_on_button();
+	}
+}
