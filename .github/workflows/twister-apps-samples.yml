@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2025 Makerdiary <https://makerdiary.com>
+# Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
 name: Twister Apps & Samples
 
 on:
@@ -29,7 +29,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: 3.12
 
       - name: Setup Zephyr project
         uses: zephyrproject-rtos/action-zephyr-setup@v1

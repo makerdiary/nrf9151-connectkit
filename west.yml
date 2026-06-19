@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2025 Makerdiary <https://makerdiary.com>
+# Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
 # SPDX-License-Identifier: Apache-2.0
 
 manifest:
@@ -17,5 +17,5 @@ manifest:
     - name: nrf
       remote: nrfconnect
       repo-path: sdk-nrf
-      revision: 98a5e50b9ac142ae2114f0b4ea257823cbf2c978
+      revision: 95ed8f7e7406e4d2d93c99f81c88e45178813e9a
       import: true

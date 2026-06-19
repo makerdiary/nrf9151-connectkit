@@ -1,15 +1,18 @@
 # nRF9151 Connect Kit
 
-> Versatile Prototyping Kit based on the nRF9151 SiP supporting LTE-M/NB-IoT Worldwide, DECT NR+ and GNSS
+> Versatile Prototyping Kit based on the nRF9151 SiP supporting LTE-M/NB-IoT/NTN, DECT NR+ and GNSS
 
 [![Current Version](https://img.shields.io/github/tag/makerdiary/nrf9151-connectkit.svg)](https://github.com/makerdiary/nrf9151-connectkit/tags)
 [![Documentation](https://github.com/makerdiary/nrf9151-connectkit/actions/workflows/documentation.yml/badge.svg?branch=main)](https://wiki.makerdiary.com/nrf9151-connectkit)
 [![Twister Apps & Samples](https://github.com/makerdiary/nrf9151-connectkit/actions/workflows/twister-apps-samples.yml/badge.svg?branch=main)](https://wiki.makerdiary.com/nrf9151-connectkit/guides/ncs/)
 [![PRs Welcome](https://img.shields.io/badge/Contributing-appreciated-brightgreen.svg?color=informational)](https://wiki.makerdiary.com/nrf9151-connectkit/contributing/)
 
+> [!NOTE]
+> From June 18, 2026, all nRF9151 Connect Kits will ship with the nRF9151 SiP revision __A1__ (upgraded from __A0__ by Nordic Semiconductor), adding support for Non-Terrestrial Networks (NTN). See [Migrating from A0 to A1 Revision][migrating-a0-to-a1] for details.
+
 ## Introduction
 
-[nRF9151 Connect Kit][nrf9151-connectkit] is a versatile prototyping kit built around the [nRF9151][nrf9151] System-in-Package (SiP) which supports LTE-M, NB-IoT, GNSS, and DECT NR+, making it suitable for global use. It has LTE bands B1-B5, B8, B12, B13, B17-B20, B25, B26, B28, B65, B66 and B85 support, Arm TrustZone CryptoCell 310, unique modem features for further power saving and ease of use.
+[nRF9151 Connect Kit][nrf9151-connectkit] is a versatile prototyping kit built around the [nRF9151][nrf9151] System-in-Package (SiP), specifically designed for cellular IoT and DECT NR+ applications. Leveraging low power LTE technology, advanced processing capabilities, and robust security features, the nRF9151 offers unparalleled performance and versatility, and supports 3GPP release 14 LTE-M/NB-IoT, NB-NTN (Non-Terrestrial Network) and DECT NR+.
 
 The design comes with an Interface MCU built using the [nRF52820][nrf52820], which enables debug, programming as well as modem firmware update, no need for any external tools. The Interface MCU also includes a USB-UART bridge for log, trace and terminal emulation, and an Interface Shell bundled with helpful commands to access the board-specific functionality.
 
@@ -25,9 +28,9 @@ It also has USB-C, LEDs, Buttons, nano-SIM card slot, Battery connector, U.FL re
 
 * Nordic Semiconductor nRF9151 SiP
 
-	- Fully integrated SiP with 64 MHz Arm Cortex-M33 and multimode LTE-M/NB-IoT modem with
-	  DECT NR+ support and GNSS
+	- Fully integrated SiP with 64 MHz Arm Cortex-M33 and multimode LTE-M/NB-IoT/NTN modem with DECT NR+ support and GNSS
 	- 700-2200 MHz LTE bands: B1-B5, B8, B12, B13, B17-B20, B25, B26, B28, B65, B66, B85
+	- NTN (Non-Terrestrial Networks) bands: B23/B252, B255, B256
 	- Power Class 5 20 dBm
 	- Power Class 3 23 dBm
 	- 1.9GHz NR+ band support
@@ -108,6 +111,7 @@ The nRF Connect SDK and its components are licensed under the 5-Clause Nordic Li
 This project may include some imported or reused components that are licensed under different terms. Please refer to the license files within those components for details.
 
 
+[migrating-a0-to-a1]: https://wiki.makerdiary.com/nrf9151-connectkit/blog/migrating-from-a0-to-a1-revision/
 [nrf9151-connectkit]: https://makerdiary.com/products/nrf9151-connectkit
 [nrf9151]: https://www.nordicsemi.com/Products/nRF9151
 [nrf52820]: https://www.nordicsemi.com/Products/nrf52820
