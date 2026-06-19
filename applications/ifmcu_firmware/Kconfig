@@ -1,15 +1,68 @@
 #
-# Copyright (c) 2020 Nordic Semiconductor ASA
-# Copyright (c) 2016-2025 Makerdiary <https://makerdiary.com>
-#
-# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+# Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
+# SPDX-License-Identifier: Apache-2.0
 #
 
-menu "IFMCU Firmware"
-rsource "src/modules/Kconfig"
-rsource "src/events/Kconfig"
-endmenu
-
-menu "Zephyr Kernel"
+source "samples/subsys/usb/common/Kconfig.sample_usbd"
 source "Kconfig.zephyr"
-endmenu
+
+config IFMCU_DAP
+	bool "IFMCU DAP"
+	default y
+	depends on DAP
+
+if IFMCU_DAP
+
+module = IFMCU_DAP
+module-str = IFMCU DAP module
+source "subsys/logging/Kconfig.template.log_config"
+
+endif # IFMCU_DAP
+
+config IFMCU_UART_BRIDGE
+	bool "IFMCU UART bridge"
+	default y
+	depends on DT_HAS_ZEPHYR_UART_BRIDGE_ENABLED
+	select UART_INTERRUPT_DRIVEN
+	select RING_BUFFER
+	help
+	  Enable the UART bridge driver.
+
+config IFMCU_UART_BRIDGE_BUF_SIZE
+	int "IFMCU UART bridge buffer size"
+	default 512
+	depends on IFMCU_UART_BRIDGE
+	help
+	  Size of the bridge ring buffers in bytes.
+
+if IFMCU_UART_BRIDGE
+
+module = IFMCU_UART_BRIDGE
+module-str = IFMCU UART bridge module
+source "subsys/logging/Kconfig.template.log_config"
+
+endif # IFMCU_UART_BRIDGE
+
+if LED
+
+module = IFMCU_LEDS
+module-str = LED module
+source "subsys/logging/Kconfig.template.log_config"
+
+endif # LED
+
+if SHELL
+
+module = IFMCU_SHELL
+module-str = IFMCU Shell
+source "subsys/logging/Kconfig.template.log_config"
+
+endif # SHELL
+
+if CHARGER
+
+module = IFMCU_CHARGER
+module-str = IFMCU Charger
+source "subsys/logging/Kconfig.template.log_config"
+
+endif # CHARGER

@@ -1,17 +1,16 @@
 /*
- * Copyright (c) 2021 Nordic Semiconductor ASA
- * Copyright (c) 2016-2025 Makerdiary <https://makerdiary.com>
+ * Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
  *
- * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <zephyr/device.h>
+#include <zephyr/kernel.h>
 #include <zephyr/drivers/led.h>
 #include "led_state.h"
 
-#define MODULE led_state
-#include "module_state_event.h"
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(MODULE, CONFIG_IFMCU_LEDS_LOG_LEVEL);
+LOG_MODULE_REGISTER(led_state, CONFIG_IFMCU_LEDS_LOG_LEVEL);
 
 #define LED_GPIO_NODE_ID		DT_COMPAT_GET_ANY_STATUS_OKAY(gpio_leds)
 #define LED_GPIO_NUM			DT_CHILD_NUM(LED_GPIO_NODE_ID)
@@ -19,9 +18,10 @@ LOG_MODULE_REGISTER(MODULE, CONFIG_IFMCU_LEDS_LOG_LEVEL);
 #define LED_PWM_NUM				DT_CHILD_NUM(LED_PWM_NODE_ID)
 
 #define LED_ID_PGOOD_STATE		0	/* Green LED */
-#define LED_ID_CHARGER_STATE	1	/* RGB LED - Green */
-#define LED_ID_UART_STATE		0	/* RGB LED - Red */
+#define LED_ID_UART_STATE		1	/* RGB LED - Red */
 #define LED_ID_DAP_STATE	    2   /* RGB LED - Blue */
+
+#define LED_ID_CHARGER_STATE	0	/* RGB LED - Green  support SW PWM */
 
 #define LED_STATE_TICK			K_MSEC(50)
 #define LED_MAX_BRIGHTNESS		80
@@ -72,6 +72,19 @@ void set_uart_led_state(led_state_t state)
     uart_led_activity = true;
     uart_led_state = state;
     return;
+}
+
+void set_all_leds_off(void)
+{
+	pgood_led_activity = false;
+	charger_led_activity = false;
+	dap_led_activity = false;
+	uart_led_activity = false;
+
+	(void) led_off(led_gpio, LED_ID_PGOOD_STATE);
+	(void) led_off(led_pwm, LED_ID_CHARGER_STATE);
+	(void) led_off(led_gpio, LED_ID_UART_STATE);
+	(void) led_off(led_gpio, LED_ID_DAP_STATE);
 }
 
 static void led_state_timer_expiry_fn(struct k_timer *timer)
@@ -170,7 +183,7 @@ static void led_state_timer_expiry_fn(struct k_timer *timer)
 		}
 
 		// update LED
-		(void) led_set_brightness(led_pwm, LED_ID_UART_STATE, uart_led_level);
+		(void) led_set_brightness(led_gpio, LED_ID_UART_STATE, uart_led_level);
 	}
 
 	if (dap_led_activity) {
@@ -193,31 +206,12 @@ static void led_state_timer_expiry_fn(struct k_timer *timer)
 		}
 
 		// update LED
-		(void) led_set_brightness(led_pwm, LED_ID_DAP_STATE, dap_led_level);
+		(void) led_set_brightness(led_gpio, LED_ID_DAP_STATE, dap_led_level);
 	}
 }
 
-static bool app_event_handler(const struct app_event_header *aeh)
+int led_state_init(void)
 {
-	if (is_module_state_event(aeh)) {
-		const struct module_state_event *event = cast_module_state_event(aeh);
-
-		if (check_state(event, MODULE_ID(main), MODULE_STATE_READY)) {
-			/* tell the rest of the system that we are busy. */
-			module_set_state(MODULE_STATE_READY);
-
-			k_timer_start(&led_state_timer, LED_STATE_TICK, LED_STATE_TICK);
-
-			/* tell the rest of the system that we are done. */
-			module_set_state(MODULE_STATE_STANDBY);
-		}
-		return false;
-	}
-	/* we should not reach this point */
-	__ASSERT_NO_MSG(false);
-
-	return false;
+	k_timer_start(&led_state_timer, LED_STATE_TICK, LED_STATE_TICK);
+	return 0;
 }
-
-APP_EVENT_LISTENER(MODULE, app_event_handler);
-APP_EVENT_SUBSCRIBE(MODULE, module_state_event);
