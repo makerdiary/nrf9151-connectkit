@@ -36,7 +36,7 @@ Before you start, check that you have the required hardware and software:
 
 To build the sample, follow the instructions in [Getting Started Guide] to set up your preferred building environment.
 
-Use the following steps to build the [Modem Trace Backend] sample on the command line.
+Use the following steps to build the [TLS Cipher Suites] sample on the command line.
 
 1. Open a terminal window.
 
@@ -45,7 +45,7 @@ Use the following steps to build the [Modem Trace Backend] sample on the command
 3. Build the sample using the `west build` command, specifying the board (following the `-b` option) as `nrf9151_connectkit/nrf9151/ns`.
 
 	``` bash
-	west build -p always -b nrf9151_connectkit/nrf9151/ns samples/ciphersuites
+	west build -p always -b nrf9151_connectkit/nrf9151/ns samples/tls_ciphersuites
 	```
 
 	The `-p` always option forces a pristine build, and is recommended for new users. Users may also use the `-p auto` option, which will use heuristics to determine if a pristine build is required, such as when building another sample.
@@ -53,7 +53,7 @@ Use the following steps to build the [Modem Trace Backend] sample on the command
 	!!! Note
 		This sample has Cortex-M Security Extensions (CMSE) enabled and separates the firmware between Non-Secure Processing Environment (NSPE) and Secure Processing Environment (SPE). Because of this, it automatically includes the [Trusted Firmware-M (TF-M)].
 
-4. After building the sample successfully, the firmware with the name `merged.hex` can be found in the `build` directory.
+4. After building the sample successfully, the firmware with the name `tfm_merged.hex` can be found in the `build/tls_ciphersuites/zephyr` directory.
 
 ## Flashing the firmware
 
@@ -67,7 +67,7 @@ west flash
 	In case you wonder, the `west flash` will execute the following command:
 
 	``` bash
-	pyocd load --target nrf91 --frequency 4000000 build/merged.hex
+	pyocd load --target nrf91 --frequency 4000000 build/tls_ciphersuites/zephyr/tfm_merged.hex
 	```
 
 ## Testing
@@ -104,13 +104,14 @@ After programming the sample, test it by performing the following steps:
 3. Observe the output of the terminal. You should see the output, similar to what is shown in the following:
 
 	``` { .txt .no-copy linenums="1" title="Terminal" }
-	All pins have been configured as non-secure
-	Booting TF-M v2.1.0
-	[Sec Thread] Secure image initializing!
-	*** Booting nRF Connect SDK v2.9.99-98a5e50b9ac1 ***
-	*** Using Zephyr OS v3.7.99-693769a5c735 ***
+	[INF] All pins have been configured as non-secure
+	[NOT] Booting TF-M v2.3.0**
+	[NOT] Built Thu 18 Jun 2026 06:35:25 UTC
+	*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
+	*** Using Zephyr OS v4.4.0-14033cef1f73 ***
 	TLS Ciphersuites sample started
-	Certificate match
+	Certificate mismatch
+	Provisioning certificate
 	Waiting for network.. OK
 	Trying all ciphersuites to find out which ones are supported...
 	Trying ciphersuite: TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
@@ -118,11 +119,11 @@ After programming the sample, test it by performing the following steps:
 	Trying ciphersuite: TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384
 	Connecting to makerdiary.com... Connected.
 	Trying ciphersuite: TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
-	Connecting to makerdiary.com... connect() failed, err: 111, Connection refused
+	Connecting to makerdiary.com... Connected.
 	Trying ciphersuite: TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
 	Connecting to makerdiary.com... Connected.
 	Trying ciphersuite: TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
-	Connecting to makerdiary.com... connect() failed, err: 111, Connection refused
+	Connecting to makerdiary.com... Connected.
 	Trying ciphersuite: TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
 	Connecting to makerdiary.com... connect() failed, err: 111, Connection refused
 	Trying ciphersuite: TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
@@ -131,7 +132,7 @@ After programming the sample, test it by performing the following steps:
 	Connecting to makerdiary.com... connect() failed, err: 111, Connection refused
 	Trying ciphersuite: TLS_PSK_WITH_AES_256_CBC_SHA
 	Connecting to makerdiary.com... connect() failed, err: 111, Connection refused
-	Tryin ciphersuite: TLS_PSK_WITH_AES_128_CBC_SHA256
+	Trying ciphersuite: TLS_PSK_WITH_AES_128_CBC_SHA256
 	Connecting to makerdiary.com... connect() failed, err: 111, Connection refused
 	Trying ciphersuite: TLS_PSK_WITH_AES_128_CBC_SHA
 	Connecting to makerdiary.com... connect() failed, err: 111, Connection refused
@@ -143,9 +144,9 @@ After programming the sample, test it by performing the following steps:
 	Ciphersuite support summary for host `makerdiary.com`:
 	TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256: Yes
 	TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384: Yes
-	TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA: No
+	TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA: Yes
 	TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256: Yes
-	TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA: No
+	TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA: Yes
 	TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA: No
 	TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256: No
 	TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA: No
@@ -161,6 +162,6 @@ After programming the sample, test it by performing the following steps:
 [Modem library]: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrfxlib/nrf_modem/README.html#nrf-modem
 [Modem key management library]: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/modem/modem_key_mgmt.html#modem-key-mgmt
 [Getting Started Guide]: ../getting-started.md
-[TLS Cipher Suites]: https://github.com/makerdiary/nrf9151-connectkit/tree/main/samples/ciphersuites
+[TLS Cipher Suites]: https://github.com/makerdiary/nrf9151-connectkit/tree/main/samples/tls_ciphersuites
 [Trusted Firmware-M (TF-M)]: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/security/tfm.html#ug-tfm
 [PuTTY]: https://apps.microsoft.com/store/detail/putty/XPFNZKSKLBP7RJ

@@ -49,7 +49,7 @@ Use the following steps to build the [HTTPS Client] sample on the command line.
 	!!! Note
 		This sample has Cortex-M Security Extensions (CMSE) enabled and separates the firmware between Non-Secure Processing Environment (NSPE) and Secure Processing Environment (SPE). Because of this, it automatically includes the [Trusted Firmware-M (TF-M)].
 
-4. After building the sample successfully, the firmware with the name `merged.hex` can be found in the `build` directory.
+4. After building the sample successfully, the firmware with the name `tfm_merged.hex` can be found in the `build/https_client/zephyr` directory.
 
 ## Flashing the firmware
 
@@ -63,7 +63,7 @@ west flash
 	In case you wonder, the `west flash` will execute the following command:
 
 	``` bash
-	pyocd load --target nrf91 --frequency 4000000 build/merged.hex
+	pyocd load --target nrf91 --frequency 4000000 build/https_client/zephyr/tfm_merged.hex
 	```
 
 ## Testing
@@ -100,11 +100,11 @@ After programming the sample, test it by performing the following steps:
 3. Observe the output of the terminal. You should see the output, similar to what is shown in the following:
 
 	``` { .txt .no-copy linenums="1" title="Terminal" }
-	All pins have been configured as non-secure
-	Booting TF-M v2.1.0
-	[Sec Thread] Secure image initializing!
-	*** Booting nRF Connect SDK v2.9.99-98a5e50b9ac1 ***
-	*** Using Zephyr OS v3.7.99-693769a5c735 ***
+	[INF] All pins have been configured as non-secure
+	[NOT] Booting TF-M v2.3.0**
+	[NOT] Built Thu 18 Jun 2026 06:58:03 UTC
+	*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
+	*** Using Zephyr OS v4.4.0-14033cef1f73 ***
 	HTTPS client sample started
 	Bringing network interface up
 	Provisioning certificate
@@ -113,19 +113,19 @@ After programming the sample, test it by performing the following steps:
 	Connecting to the network
 	+CGEV: EXCE STATUS 0
 	%MDMEV: SEARCH STATUS 1
-	+CEREG: 2,"1D23","0D70394D",9
+	+CEREG: 2,"1D23","0D70394B",9
 	%MDMEV: PRACH CE-LEVEL 0
 	+CSCON: 1
 	+CGEV: ME PDN ACT 0,0
 	+CNEC_ESM: 50,0
 	%MDMEV: SEARCH STATUS 2
-	+CEREG: 1,"1D23","0D70394D",9,,,"00100001","00000110"
+	+CEREG: 1,"1D23","0D70394B",9,,,"00100001","00000110"
 	Network connectivity established and IP address assigned
 	Looking up example.com
-	Resolved 23.215.0.136 (AF_INET)
+	Resolved 104.20.23.154 (AF_INET)
 	Connecting to example.com:443
 	Sent 61 bytes
-	Received 345 bytes
+	Received 269 bytes
 
 	>        HTTP/1.1 200 OK
 

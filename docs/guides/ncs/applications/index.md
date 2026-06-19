@@ -12,10 +12,6 @@ A set of example applications are provided to show how to implement typical user
 	
 	Enable you to test various connectivity features of the nRF9151 such as LTE link handling, TCP/IP connections and GNSS, etc.
 
--   __[Serial LTE Modem](./serial_lte_modem.md)__
-	
-	Emulate a stand-alone LTE modem on the nRF9151. The application accepts both the modem-specific AT commands and proprietary AT commands.
-
 </div>
 
 

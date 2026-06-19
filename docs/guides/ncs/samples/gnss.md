@@ -47,7 +47,7 @@ Use the following steps to build the [GNSS] sample on the command line.
 	!!! Note
 		This sample has Cortex-M Security Extensions (CMSE) enabled and separates the firmware between Non-Secure Processing Environment (NSPE) and Secure Processing Environment (SPE). Because of this, it automatically includes the [Trusted Firmware-M (TF-M)].
 
-4. After building the sample successfully, the firmware with the name `merged.hex` can be found in the `build` directory.
+4. After building the sample successfully, the firmware with the name `tfm_merged.hex` can be found in the `build/gnss/zephyr` directory.
 
 ## Flashing the firmware
 
@@ -61,7 +61,7 @@ west flash
 	In case you wonder, the `west flash` will execute the following command:
 
 	``` bash
-	pyocd load --target nrf91 --frequency 4000000 build/merged.hex
+	pyocd load --target nrf91 --frequency 4000000 build/gnss/zephyr/tfm_merged.hex
 	```
 
 ## Testing

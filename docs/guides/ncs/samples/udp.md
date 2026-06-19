@@ -45,7 +45,7 @@ Use the following steps to build the [UDP] sample on the command line.
 	!!! Note
 		This sample has Cortex-M Security Extensions (CMSE) enabled and separates the firmware between Non-Secure Processing Environment (NSPE) and Secure Processing Environment (SPE). Because of this, it automatically includes the [Trusted Firmware-M (TF-M)].
 
-4. After building the sample successfully, the firmware with the name `merged.hex` can be found in the `build` directory.
+4. After building the sample successfully, the firmware with the name `tfm_merged.hex` can be found in the `build/udp/zephyr` directory.
 
 ## Flashing the firmware
 
@@ -59,7 +59,7 @@ west flash
 	In case you wonder, the `west flash` will execute the following command:
 
 	``` bash
-	pyocd load --target nrf91 --frequency 4000000 build/merged.hex
+	pyocd load --target nrf91 --frequency 4000000 build/udp/zephyr/tfm_merged.hex
 	```
 
 ## Testing
@@ -96,25 +96,15 @@ After programming the sample, test it by performing the following steps:
 3. Observe the output of the terminal. You should see the output, similar to what is shown in the following:
 
 	``` { .txt .no-copy linenums="1" title="Terminal" }
-	All pins have been configured as non-secure
-	Booting TF-M v2.1.0
-	[Sec Thread] Secure image initializing!
-	*** Booting nRF Connect SDK v2.9.99-98a5e50b9ac1 ***
-	*** Using Zephyr OS v3.7.99-693769a5c735 ***
-	UDP sample has started
-	LTE cell changed: Cell ID: 225458507, Tracking area: 7459
-	RAI configuration update: Cell ID: 225458507, MCC: 460, MNC: 0, AS-RAI: 0, CP-RAI: 1
-	RRC mode: Connected
-	Network registration status: Connected - home
-	PSM parameter update: TAU: 3600 s, Active time: 0 s
-	Transmitting UDP/IP payload of 38 bytes to the IP address 8.8.8.8, port number 2469
-	RRC mode: Idle
-
-	Transmitting UDP/IP payload of 38 bytes to the IP address 8.8.8.8, port number 2469
-	RAI configuration update: Cell ID: 225458507, MCC: 460, MNC: 0, AS-RAI: 1, CP-RAI: 1
-	RRC mode: Connected
-	RRC mode: Idle
-	...
+	[INF] All pins have been configured as non-secure
+	[NOT] Booting TF-M v2.3.0**
+	[NOT] Built Thu 18 Jun 2026 07:06:54 UTC
+	*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
+	*** Using Zephyr OS v4.4.0-14033cef1f73 ***
+	[00:00:00.257,904] <inf> udp_sample: UDP sample has started
+	[00:00:00.257,934] <inf> udp_sample: Bringing network interface up and connecting to the network
+	[00:01:18.176,544] <inf> udp_sample: Network connectivity established
+	[00:01:18.177,001] <inf> udp_sample: Transmitting UDP/IP payload of 38 bytes to the IP address 8.8.8.8, port number 2469
 	```
 
 [Connection Manager]: https://docs.nordicsemi.com/bundle/ncs-latest/page/zephyr/connectivity/networking/conn_mgr/main.html#conn-mgr-overview

@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2025 Makerdiary <https://makerdiary.com>
+# Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -20,7 +20,7 @@ repo_url: https://github.com/makerdiary/nrf9151-connectkit
 edit_uri: edit/main/docs/
 
 # Copyright
-copyright: 'Copyright &copy; 2016-2025 <a href="https://makerdiary.com" target="_blank">makerdiary</a>'
+copyright: 'Copyright &copy; 2016-2026 <a href="https://makerdiary.com" target="_blank">makerdiary</a>'
 
 # Configuration
 theme:
@@ -85,7 +85,7 @@ theme:
     hero:
       title: Rapid Prototyping Kit with Cellular IoT Connectivity
       description: >-
-        Based on the nRF9151 SiP, featuring LTE-M/NB-IoT Worldwide, DECT NR+ & GNSS, Interface MCU, Battery Charger, Easy-to-use Form Factor and nRF Connect SDK support.
+        Based on the nRF9151 SiP, featuring LTE-M/NB-IoT/NTN, DECT NR+ & GNSS, Interface MCU, Battery Charger, Easy-to-use Form Factor and nRF Connect SDK support.
       image: assets/images/nrf9151_connectkit_prod_hero_reva.png
       button_primary:
         label: Quick Start
@@ -100,9 +100,8 @@ theme:
         - icon: microcotroller
           title: Built around nRF9151 SiP
           description: >-
-            nRF9151 is a low power and highly integrated SiP with 64 MHz Arm Cortex-M33 and multimode LTE-M/NB-IoT modem
-            with DECT NR+ support and GNSS. It has global band support, Arm TrustZone CryptoCell 310, unique modem features
-            for further power saving and ease of use.
+            nRF9151 is a low power and highly integrated SiP with 64 MHz Arm Cortex-M33, LTE-M/NB-IoT/NTN and DECT NR+ modem, and GNSS.
+            It has global band support, Arm TrustZone CryptoCell 310, unique modem features for further power saving and ease of use.
         - icon: material/console-network
           title: On-board Interface MCU
           description: >-
@@ -249,7 +248,6 @@ nav:
       - Applications:
         - guides/ncs/applications/index.md
         - Modem Shell: guides/ncs/applications/modem_shell.md
-        - Serial LTE Modem: guides/ncs/applications/serial_lte_modem.md
         - Interface MCU Firmware: guides/ncs/applications/ifmcu.md
       - Samples:
         - guides/ncs/samples/index.md
@@ -269,8 +267,11 @@ nav:
         - UDP: guides/ncs/samples/udp.md
         - MQTT: guides/ncs/samples/mqtt.md
         - nRF Cloud Device Provisioning: guides/ncs/samples/nrf_provisioning.md
-        - nRF Cloud REST Device Message: guides/ncs/samples/nrf_cloud_rest_device_message.md
-        - nRF Cloud Multi-service: guides/ncs/samples/nrf_cloud_multi_service.md
+        - nRF Cloud CoAP Cellular Location: guides/ncs/samples/nrf_cloud_coap_cell_location.md
+        - nRF Cloud CoAP Device Message: guides/ncs/samples/nrf_cloud_coap_device_message.md
+        - nRF Cloud MQTT Cellular Location: guides/ncs/samples/nrf_cloud_mqtt_cell_location.md
+        - nRF Cloud MQTT Device Message: guides/ncs/samples/nrf_cloud_mqtt_device_message.md
+        - System OFF: guides/ncs/samples/system_off.md
     - Programming Guide:
       - guides/programming/index.md
       - Update nRF9151 Firmware: guides/programming/update-nrf9151-fw.md

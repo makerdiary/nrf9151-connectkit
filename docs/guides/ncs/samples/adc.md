@@ -129,8 +129,8 @@ After programming the sample, test it by performing the following steps:
 3. Observe the output of the terminal. You should see the output, similar to what is shown in the following:
 
 	``` { .txt .no-copy linenums="1" title="Terminal" }
-	*** Booting nRF Connect SDK v2.9.99-98a5e50b9ac1 ***
-	*** Using Zephyr OS v3.7.99-693769a5c735 ***
+	*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
+	*** Using Zephyr OS v4.4.0-14033cef1f73 ***
 	ADC reading[0]:
 	- adc@e000, channel 0: 2379 = 522 mV
 	- adc@e000, channel 1: 15070 = 3311 mV

@@ -6,12 +6,12 @@ The nRF Cloud Device Provisioning sample demonstrates how to use the [nRF Cloud 
 
 The sample shows how the device performs the following actions:
 
-- Connects to nRF Cloud Provisioning Service.
-- Fetches available device-specific provisioning configuration.
-- Decodes the commands.
-- Acts on any AT commands, if available.
-- Reports the results back to the server. In the case of an error, stops processing the commands at the first error and reports it back to server.
-- Sends `FINISHED` response if all the previous commands are executed without errors provided and `FINISHED` is one of the set provisioning commands.
+- Connects to the nRF Cloud Provisioning Service.
+- Retrieves the device-specific provisioning configuration.
+- Decodes the received commands.
+- Executes any AT commands, if present.
+- Reports the results back to the server. If an error occurs, stops processing further commands and reports the error to the server.
+- Sends a `FINISHED` response if all commands are executed successfully and `FINISHED` is one of the provisioning commands.
 
 ## Requirements
 
@@ -63,7 +63,7 @@ Use the following steps to build the [nRF Cloud Device Provisioning] sample on t
 3. Build the sample using the `west build` command, specifying the board (following the `-b` option) as `nrf9151_connectkit/nrf9151/ns`.
 
 	``` bash
-	west build -p always -b nrf9151_connectkit/nrf9151/ns samples/nrf_provisioning
+	west build -p always -b nrf9151_connectkit/nrf9151/ns samples/nrf_device_provisioning
 	```
 
 	The `-p` always option forces a pristine build, and is recommended for new users. Users may also use the `-p auto` option, which will use heuristics to determine if a pristine build is required, such as when building another sample.
@@ -71,7 +71,7 @@ Use the following steps to build the [nRF Cloud Device Provisioning] sample on t
 	!!! Note
 		This sample has Cortex-M Security Extensions (CMSE) enabled and separates the firmware between Non-Secure Processing Environment (NSPE) and Secure Processing Environment (SPE). Because of this, it automatically includes the [Trusted Firmware-M (TF-M)].
 
-4. After building the sample successfully, the firmware with the name `merged.hex` can be found in the `build` directory.
+4. After building the sample successfully, the firmware with the name `tfm_merged.hex` can be found in the `build/nrf_device_provisioning/zephyr` directory.
 
 ## Flashing the firmware
 
@@ -85,7 +85,7 @@ west flash
 	In case you wonder, the `west flash` will execute the following command:
 
 	``` bash
-	pyocd load --target nrf91 --frequency 4000000 build/merged.hex
+	pyocd load --target nrf91 --frequency 4000000 build/nrf_device_provisioning/zephyr/tfm_merged.hex
 	```
 
 ## Testing
@@ -122,25 +122,22 @@ After programming the sample, test it by performing the following steps:
 3. Wait for the LTE link to be established. You should see the output, similar to what is shown in the following:
 
 	``` { .txt .no-copy linenums="1" title="Terminal" }
-	All pins have been configured as non-secure
-	Booting TF-M v2.1.0
-	[Sec Thread] Secure image initializing!
-	TF-M Float ABI: Hard
-	Lazy stacking enabled
+	[INF] All pins have been configured as non-secure
+	[NOT] Booting TF-M v2.3.0**
+	[NOT] Built Thu 18 Jun 2026 07:37:29 UTC
+	[INF] Float ABI: Hard, Lazy stacking enabled
 
-	[00:00:00.541,412] <inf> nrf_provisioning_sample: Establishing LTE link ...
-	[00:01:26.375,061] <inf> nrf_provisioning: Provisioning new certificate
-	uart:~$
-	[00:02:21.829,528] <inf> nrf_provisioning_sample: Modem connection restored
-	[00:02:21.839,080] <inf> nrf_provisioning_sample: Waiting for modem to acquire network time...
-	[00:02:24.850,982] <inf> nrf_provisioning_sample: Network time obtained
-	[00:02:25.033,386] <inf> nrf_provisioning: Checking for provisioning commands in 3s seconds
-	[00:02:28.044,403] <inf> nrf_provisioning_sample: Provisioning started
-	[00:02:28.159,698] <inf> nrf_provisioning_http: Requesting commands
-	[00:02:36.961,242] <inf> nrf_provisioning_http: Connected
-	[00:02:36.969,207] <inf> nrf_provisioning_http: No more commands to process on server side
-	[00:02:36.980,072] <inf> nrf_provisioning_sample: Provisioning stopped
-	[00:02:36.989,227] <inf> nrf_provisioning: Checking for provisioning commands in 86402s seconds
+	*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
+	*** Using Zephyr OS v4.4.0-14033cef1f73 ***
+	[00:00:00.261,352] <inf> nrf_provisioning_sample: nRF Device Provisioning Sample
+	[00:00:00.261,383] <inf> nrf_provisioning_sample: Bringing network interface up and connecting to the network
+	[00:00:00.263,214] <inf> nrf_provisioning_sample: Provisioning scheduled, next attempt in 3 seconds
+	[00:00:03.263,366] <inf> nrf_provisioning_sample: Provisioning started
+	[00:01:03.301,300] <err> nrf_provisioning: Failed to get valid modem time, err -116
+	[00:01:03.301,300] <err> nrf_provisioning_sample: Provisioning failed, no valid datetime reference
+	[00:01:03.301,330] <inf> nrf_provisioning_sample: Provisioning stopped
+	[00:01:21.292,205] <inf> nrf_provisioning_sample: Network connectivity established
+	[00:01:21.292,266] <inf> nrf_provisioning_sample: IPv4 connectivity established
 	uart:~$
 	```
 
@@ -163,67 +160,71 @@ After programming the sample, test it by performing the following steps:
 
 	The device is now claimed and ready to use the nRF Cloud Provisioning Service. It appears in the Claimed Devices list in a provisioning group for the newly created rule.
 
-6. To enforce the connection to the provisioning service, press the __DFU/RST__ button to reset the nRF9151 SiP.
+	![](../../../assets/images/nrf_cloud_claiming_ready.png)
 
-7. Verify in the terminal that the device checks for provisioning commands and runs them. You should see the output, similar to what is shown in the following:
+6. To enforce the connection to the provisioning service, press the __DFU/RST__ button to reset the nRF9151 SiP. You may encounter the following error:
 
 	``` { .txt .no-copy linenums="1" title="Terminal" }
-	All pins have been configured as non-secure
-	Booting TF-M v2.1.0
-	[Sec Thread] Secure image initializing!
-	TF-M Float ABI: Hard
-	Lazy stacking enabled
-
-	[00:00:00.541,442] <inf> nrf_provisioning_sample: Establishing LTE link ...
-	[00:01:21.382,537] <inf> nrf_provisioning: Checking for provisioning commands in 3s seconds
-	[00:01:24.393,554] <inf> nrf_provisioning_sample: Provisioning started
-	[00:01:24.507,537] <inf> nrf_provisioning_http: Requesting commands
-	[00:01:32.932,800] <inf> nrf_provisioning_http: Connected
-	[00:01:32.943,847] <inf> nrf_provisioning_http: Processing commands
-	[00:01:33.546,997] <inf> nrf_provisioning: Disconnected from network - provisioning paused
-	[00:02:26.529,174] <inf> nrf_provisioning: Disconnected from network - provisioning paused
-	[00:02:29.311,004] <inf> nrf_provisioning: Connected; home network - provisioning resumed
-	[00:02:29.321,838] <inf> nrf_provisioning_sample: Modem connection restored
-	[00:02:29.331,390] <inf> nrf_provisioning_sample: Waiting for modem to acquire network time...
-	[00:02:32.343,444] <inf> nrf_provisioning_sample: Network time obtained
-	[00:02:32.352,874] <inf> nrf_provisioning_http: Sending response to server
-	[00:02:35.658,569] <inf> nrf_provisioning_http: Requesting commands
-	[00:02:38.420,654] <inf> nrf_provisioning_http: Connected
-	[00:02:38.431,701] <inf> nrf_provisioning_http: Processing commands
-	[00:02:39.059,326] <inf> nrf_provisioning: Disconnected from network - provisioning paused
-	[00:03:31.971,496] <inf> nrf_provisioning: Disconnected from network - provisioning paused
-	[00:03:36.402,374] <inf> nrf_provisioning: Connected; home network - provisioning resumed
-	[00:03:36.413,208] <inf> nrf_provisioning_sample: Modem connection restored
-	[00:03:36.422,729] <inf> nrf_provisioning_sample: Waiting for modem to acquire network time...
-	[00:03:39.434,692] <inf> nrf_provisioning_sample: Network time obtained
-	[00:03:39.443,969] <inf> nrf_provisioning_http: Sending response to server
-	[00:03:42.438,201] <inf> nrf_provisioning_sample: Provisioning stopped
-	[00:03:42.447,296] <inf> nrf_provisioning_sample: Provisioning done, rebooting...
-	[00:03:42.801,940] <inf> nrf_provisioning: Disconnected from network - provisioning paused
-	uart:~$ All pins have been configured as non-secure
-	Booting TF-M v2.1.0
-	[Sec Thread] Secure image initializing!
-	TF-M Float ABI: Hard
-	Lazy stacking enabled
-
-	[00:00:00.520,874] <inf> nrf_provisioning_sample: Establishing LTE link ...
-	[00:01:23.054,931] <inf> nrf_provisioning: Checking for provisioning commands in 3s seconds
-	[00:01:26.065,979] <inf> nrf_provisioning_sample: Provisioning started
-	[00:01:26.179,962] <inf> nrf_provisioning_http: Requesting commands
-	[00:01:34.705,780] <inf> nrf_provisioning_http: Connected
-	[00:01:34.713,775] <inf> nrf_provisioning_http: No more commands to process on server side
-	[00:01:34.724,609] <inf> nrf_provisioning_sample: Provisioning stopped
-	[00:01:34.733,764] <inf> nrf_provisioning: Checking for provisioning commands in 86400s seconds
+	...
+	[00:01:03.301,300] <err> nrf_provisioning: Failed to get valid modem time, err -116
+	[00:01:03.301,300] <err> nrf_provisioning_sample: Provisioning failed, no valid datetime reference
+	[00:01:03.301,330] <inf> nrf_provisioning_sample: Provisioning stopped
+	[00:01:21.292,205] <inf> nrf_provisioning_sample: Network connectivity established
+	[00:01:21.292,266] <inf> nrf_provisioning_sample: IPv4 connectivity established
 	uart:~$
 	```
 
-8. After the device finishes processing provisioning commands, the device status is now shown as __`PROVISIONED`__.
+7. If this occurs, you can attempt to manually trigger provisioning by running the following command:
+
+	``` { .txt .no-copy linenums="1" title="Terminal" }
+	uart:~$ nrf_provisioning now
+	```
+
+8. Verify in the terminal that the device checks for provisioning commands and runs them. You should see the output, similar to what is shown in the following:
+
+	``` { .txt .no-copy linenums="1" title="Terminal" }
+	uart:~$ nrf_provisioning now
+	[00:16:17.445,739] <inf> nrf_provisioning_sample: Provisioning started
+	[00:16:17.548,370] <inf> nrf_provisioning_http: Requesting commands
+	[00:16:24.692,932] <inf> nrf_provisioning_http: Connected
+	[00:16:24.693,206] <inf> nrf_provisioning_http: Processing commands
+	[00:16:24.694,671] <inf> nrf_provisioning_sample: nRF Provisioning requires device to deactivate network
+	[00:16:24.952,514] <inf> nrf_provisioning_sample: Network connectivity lost
+	[00:16:25.644,683] <inf> nrf_provisioning_sample: nRF Provisioning requires device to activate network
+	[00:17:22.307,312] <inf> nrf_provisioning_sample: Network connectivity established
+	[00:17:22.307,342] <inf> nrf_provisioning_sample: IPv4 connectivity established
+	[00:17:24.685,302] <inf> nrf_provisioning_http: Sending response to server
+	[00:17:27.440,917] <inf> nrf_provisioning_http: Requesting commands
+	[00:17:29.953,186] <inf> nrf_provisioning_http: Connected
+	[00:17:29.953,430] <inf> nrf_provisioning_http: Processing commands
+	[00:17:29.954,589] <inf> nrf_provisioning_sample: nRF Provisioning requires device to deactivate network
+	[00:17:30.388,488] <inf> nrf_provisioning_sample: Network connectivity lost
+	[00:17:31.131,988] <inf> nrf_provisioning_sample: nRF Provisioning requires device to activate network
+	[00:18:27.238,311] <inf> nrf_provisioning_sample: Network connectivity established
+	[00:18:27.238,342] <inf> nrf_provisioning_sample: IPv4 connectivity established
+	[00:18:29.178,466] <inf> nrf_provisioning_http: Sending response to server
+	[00:18:31.713,684] <inf> nrf_provisioning_http: Requesting commands
+	[00:18:34.051,818] <inf> nrf_provisioning_http: Connected
+	[00:18:34.052,093] <inf> nrf_provisioning_http: Processing commands
+	[00:18:34.053,558] <inf> nrf_provisioning_sample: nRF Provisioning requires device to deactivate network
+	[00:18:34.455,139] <inf> nrf_provisioning_sample: Network connectivity lost
+	[00:18:34.576,354] <inf> nrf_provisioning_sample: nRF Provisioning requires device to activate network
+	[00:19:31.988,952] <inf> nrf_provisioning_sample: Network connectivity established
+	[00:19:31.989,013] <inf> nrf_provisioning_sample: IPv4 connectivity established
+	[00:19:34.617,065] <inf> nrf_provisioning_http: Sending response to server
+	[00:19:36.902,282] <inf> nrf_provisioning_sample: Provisioning done
+	[00:19:36.902,313] <inf> nrf_provisioning_sample: The device can now connect to the provisioned cloud service
+	[00:19:36.902,343] <inf> nrf_provisioning_sample: Provisioning stopped
+	[00:19:36.902,404] <inf> nrf_provisioning_sample: Provisioning scheduled, next attempt in 62 seconds
+	```
+
+9. After the device finishes processing provisioning commands, the device status is now shown as __`PROVISIONED`__.
 
 	![](../../../assets/images/nrf_cloud_device_provisioned.png)
 
 [nRF Cloud device provisioning service]: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/networking/nrf_provisioning.html#lib-nrf-provisioning
 [nRF Cloud]: https://nrfcloud.com/
 [Getting Started Guide]: ../getting-started.md
-[nRF Cloud Device Provisioning]: https://github.com/makerdiary/nrf9151-connectkit/tree/main/samples/nrf_provisioning
+[nRF Cloud Device Provisioning]: https://github.com/makerdiary/nrf9151-connectkit/tree/main/samples/nrf_device_provisioning
 [Trusted Firmware-M (TF-M)]: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/security/tfm.html#ug-tfm
 [PuTTY]: https://apps.microsoft.com/store/detail/putty/XPFNZKSKLBP7RJ

@@ -1,6 +1,6 @@
 ---
 title: nRF9151 Connect Kit is Here!
-date: 2024-03-07
+date: 2025-03-07
 authors:
   - makerdiary
 cover: cover.png

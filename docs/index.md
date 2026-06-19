@@ -10,6 +10,16 @@ hide:
 
 <div class="grid cards blog-cards" markdown>
 
+-   [![](./blog/posts/migrating-from-a0-to-a1-revision/cover.png)][migrating-from-a0-to-a1-revision]
+
+    __[Migrating from A0 to A1 Revision][migrating-from-a0-to-a1-revision]__
+
+    We are pleased to announce that the nRF9151 SiP module on the nRF9151 Connect Kit has been updated from revision A0 to A1, adding support for Non-Terrestrial Networks (NTN).
+
+    :octicons-calendar-24: Jun 18, 2026 ・ :octicons-clock-24: 3 min read
+
+    [migrating-from-a0-to-a1-revision]: ./blog/posts/migrating-from-a0-to-a1-revision/index.md
+
 -   [![](./blog/posts/introducing-nrf-cloud/cover.png)][introducing-nrf-cloud]
 
     __[Introducing nRF Cloud][introducing-nrf-cloud]__
@@ -30,15 +40,6 @@ hide:
 
     [introducing-interface-mcu]: ./blog/posts/introducing-interface-mcu/index.md
 
--   [![](./blog/posts/nrf9151-connect-kit-is-here/cover.png)][nrf9151-connect-kit-is-here]
-
-    __[nRF9151 Connect Kit is Here!][nrf9151-connect-kit-is-here]__
-
-    Today we are excited to launch our latest IoT prototyping kit, the nRF9151 Connect Kit, for LTE-M, NB-IoT, DECT NR+, and GNSS applications.
-
-    :octicons-calendar-24: Mar 7, 2025 ・ :octicons-clock-24: 4 min read
-
-    [nrf9151-connect-kit-is-here]: ./blog/posts/nrf9151-connect-kit-is-here/index.md
 
 </div>
 

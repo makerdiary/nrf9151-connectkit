@@ -60,7 +60,7 @@ Use the following steps to build the [Modem Battery] sample on the command line.
 	!!! Note
 		This sample has Cortex-M Security Extensions (CMSE) enabled and separates the firmware between Non-Secure Processing Environment (NSPE) and Secure Processing Environment (SPE). Because of this, it automatically includes the [Trusted Firmware-M (TF-M)].
 
-4. After building the sample successfully, the firmware with the name `merged.hex` can be found in the `build` directory.
+4. After building the sample successfully, the firmware with the name `tfm_merged.hex` can be found in the `build/modem_battery/zephyr` directory.
 
 ## Flashing the firmware
 
@@ -74,7 +74,7 @@ west flash
 	In case you wonder, the `west flash` will execute the following command:
 
 	``` bash
-	pyocd load --target nrf91 --frequency 4000000 build/merged.hex
+	pyocd load --target nrf91 --frequency 4000000 build/modem_battery/zephyr/tfm_merged.hex
 	```
 
 ## Testing
@@ -111,26 +111,26 @@ After programming the sample, test it by performing the following steps:
 3. Observe the output of the terminal. You should see the output, similar to what is shown in the following:
 
 	``` { .txt .no-copy linenums="1" title="Terminal" }
-	All pins have been configured as non-secure
-	Booting TF-M v2.1.0
-	[Sec Thread] Secure image initializing!
-	*** Booting nRF Connect SDK v2.9.99-98a5e50b9ac1 ***
-	*** Using Zephyr OS v3.7.99-693769a5c735 ***
+	[INF] All pins have been configured as non-secure
+	[NOT] Booting TF-M v2.3.0**
+	[NOT] Built Thu 18 Jun 2026 05:59:34 UTC
+	*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
+	*** Using Zephyr OS v4.4.0-14033cef1f73 ***
 	Battery sample started
 	Initializing modem library
-	Battery voltage: 4520
+	Battery voltage: 4516
 	Setting modem to normal mode...
 	Normal mode set.
 	Connected.
-	Battery voltage: 4524
+	Battery voltage: 4516
 	Executing DNS lookup for 'example.com'...
-	Battery voltage: 4520
+	Battery voltage: 4516
 	Executing DNS lookup for 'google.com'...
 	Battery voltage: 4516
 	Executing DNS lookup for 'apple.com'...
-	Battery voltage: 4516
-	Executing DNS lookup for 'amazon.com'...
 	Battery voltage: 4520
+	Executing DNS lookup for 'amazon.com'...
+	Battery voltage: 4516
 	Executing DNS lookup for 'microsoft.com'...
 	...
 	```

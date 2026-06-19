@@ -45,7 +45,7 @@ Use the following steps to build the [AT Monitor] sample on the command line.
 	!!! Note
 		This sample has Cortex-M Security Extensions (CMSE) enabled and separates the firmware between Non-Secure Processing Environment (NSPE) and Secure Processing Environment (SPE). Because of this, it automatically includes the [Trusted Firmware-M (TF-M)].
 
-4. After building the sample successfully, the firmware with the name `merged.hex` can be found in the `build` directory.
+4. After building the sample successfully, the firmware with the name `tfm_merged.hex` can be found in the `build/at_monitor/zephyr` directory.
 
 ## Flashing the firmware
 
@@ -59,7 +59,7 @@ west flash
 	In case you wonder, the `west flash` will execute the following command:
 
 	``` bash
-	pyocd load --target nrf91 --frequency 4000000 build/merged.hex
+	pyocd load --target nrf91 --frequency 4000000 build/at_monitor/zephyr/tfm_merged.hex
 	```
 
 ## Testing
@@ -96,30 +96,30 @@ After programming the sample, test it by performing the following steps:
 3. Observe the output of the terminal. You should see the output, similar to what is shown in the following:
 
 	``` { .txt .no-copy linenums="1" title="Terminal" }
-	All pins have been configured as non-secure
-	Booting TF-M v2.1.0
-	[Sec Thread] Secure image initializing!
-	*** Booting nRF Connect SDK v2.9.99-98a5e50b9ac1 ***
-	*** Using Zephyr OS v3.7.99-693769a5c735 ***
+	[INF] All pins have been configured as non-secure
+	[NOT] Booting TF-M v2.3.0**
+	[NOT] Built Thu 18 Jun 2026 05:54:15 UTC
+	*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
+	*** Using Zephyr OS v4.4.0-14033cef1f73 ***
 	AT Monitor sample started
 	Subscribing to notifications
 	Connecting to network
 	Resuming link quality monitor for AT notifications
 	Waiting for network
-	Link quality: -73 dBm
+	Link quality: -104 dBm
 	Network registration status: searching
 	Network registration status: home
 	Network connection ready
 	Pausing link quality monitor for AT notifications
 	Reading PSM info...
-	  PSM: enabled
-	  Periodic TAU string: 00000110
-	  Active time string: 00100001
+	PSM: enabled
+	Periodic TAU string: 00000110
+	Active time string: 00100001
 	Enabling PSM
 	Reading PSM info...
-	  PSM: enabled
-	  Periodic TAU string: 00000110
-	  Active time string: 00100001
+	PSM: enabled
+	Periodic TAU string: 00000110
+	Active time string: 00100001
 	Modem response:
 	+CEREG: 1,1
 	OK

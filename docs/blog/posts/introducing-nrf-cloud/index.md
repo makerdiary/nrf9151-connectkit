@@ -1,6 +1,6 @@
 ---
 title: Introducing nRF Cloud
-date: 2024-03-11
+date: 2025-03-11
 authors:
   - makerdiary
 cover: cover.png
@@ -53,12 +53,20 @@ We think the best way to learn is by doing. We provides the following samples th
   
     Demonstrate how to use the nRF Cloud device provisioning service.
 
--   __[nRF Cloud REST Device Message](./../../../guides/ncs/samples/nrf_cloud_rest_device_message.md)__
+-   __[nRF Cloud CoAP Cellular Location](./../../../guides/ncs/samples/nrf_cloud_coap_cell_location.md)__
   
-    Demonstrate how to use the nRF Cloud REST API to send Device Messages.
+    Demonstrate how to utilize the nRF Cloud’s cellular location service over CoAP.
 
--   __[nRF Cloud Multi-service](./../../../guides/ncs/samples/nrf_cloud_multi_service.md)__
+-   __[nRF Cloud CoAP Device Message](./../../../guides/ncs/samples/nrf_cloud_coap_device_message.md)__
   
-    Demonstrate how to integrate multiple nRF Cloud services.
+    Demonstrate how to use the nRF Cloud CoAP API to send device messages.
+
+-   __[nRF Cloud MQTT Cellular Location](./../../../guides/ncs/samples/nrf_cloud_mqtt_cell_location.md)__
+  
+    Demonstrate how to utilize the nRF Cloud’s cellular location service over MQTT.
+
+-   __[nRF Cloud MQTT Device Message](./../../../guides/ncs/samples/nrf_cloud_mqtt_device_message.md)__
+  
+    Demonstrate how to use the nRF Cloud MQTT API to send device messages.
 
 </div>

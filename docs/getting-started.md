@@ -56,23 +56,23 @@ Open up a serial terminal, specifying the Modem Shell COM port:
 Press the __DFU/RST__ button to reset the nRF9151 SiP. Observe the output of the terminal. You should see the output, similar to what is shown in the following:
 
 ``` { .txt .no-copy linenums="1" title="Terminal" }
-All pins have been configured as non-secure
-Booting TF-M v2.1.0
-[Sec Thread] Secure image initializing!
-TF-M isolation level is: 0x00000001
-TF-M Float ABI: Hard
-Lazy stacking enabled
-*** Booting nRF Connect SDK v2.9.99-98a5e50b9ac1 ***
-*** Using Zephyr OS v3.7.99-693769a5c735 ***
+[INF] All pins have been configured as non-secure
+[NOT] Booting TF-M v2.3.0**
+[NOT] Built Thu 18 Jun 2026 05:05:45 UTC
+[VER] Isolation level is: 1
+[INF] Float ABI: Hard, Lazy stacking enabled
+*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
+*** Using Zephyr OS v4.4.0-14033cef1f73 ***
 
 Reset reason: PIN reset
+
 mosh:~$
-MOSH version:       v2.9.99-98a5e50b9ac1
+MOSH version:       v3.3.99-95ed8f7e7406
 MOSH build id:      custom
 MOSH build variant: dev
 HW version:         nRF9151 LACA A0A
-Modem FW version:   mfw_nrf91x1_2.0.2
-Modem FW UUID:      320176d5-9f40-45fc-923b-2661ec18d547
+Modem FW version:   mfw_nrf91x1_2.0.4
+Modem FW UUID:      11866dbb-3d51-4226-8098-59dc6b9b5a50
 
 
 Modem domain event: Light search done
@@ -83,10 +83,11 @@ Type ++tab++ to list all supported commands. When you type a command with `--hel
 
 ``` { .txt .no-copy linenums="21" title="Terminal" }
 mosh:~$
-  at           clear        cloud_rest   curl         date         device       dl           fota         gnss
-  gpio_count   heap         help         history      iperf3       kernel       link         location     ping
-  print        rem          resize       rest         retval       shell        sleep        sms          sock
-  startup_cmd  th           uart         version
+  at           clear        cloud        curl         date         device       devmem       dl
+  fota         gnss         gpio_count   heap         help         history      iperf3       kernel
+  link         location     ntn          ping         print        rem          resize       rest
+  retval       shell        sleep        sms          sock         startup_cmd  th           uart
+  version
 mosh:~$ ping --help
 Usage: ping [options] -d destination
 
@@ -116,27 +117,27 @@ Network registration status: Connected - home network
 Modem config for system mode: LTE-M - NB-IoT - GNSS
 Modem config for LTE preference: LTE-M is preferred, but PLMN selection is more important
 Currently active system mode: NB-IoT
-Battery voltage:       4516 mV
-Modem temperature:     25 C
-Device ID:             nrf-359404230074347
+Battery voltage:       4512 mV
+Modem temperature:     32 C
+Device ID:             5034474b-3731-40ab-809f-152c5c11a9a5
 Operator full name:   ""
 Operator short name:  ""
 Operator PLMN:        "46000"
-Current cell id:       213818780 (0x0CBE9D9C)
-Current phy cell id:   352
+Current cell id:       225458509 (0x0D70394D)
+Current phy cell id:   176
 Current band:          8
-Current TAC:           7464 (0x1D28)
-Current rsrp:          55: -86dBm
-Current snr:           26: 2dB
-Mobile network time and date: 25/02/16,05:25:35+32
+Current TAC:           7459 (0x1D23)
+Current rsrp:          39: -102dBm
+Current snr:           29: 5dB
+Mobile network time and date: 26/06/18,05:09:43+32
 PDP context info 1:
   CID:                0
   PDN ID:             0
   PDP context active: yes
   PDP type:           IP
-  APN:                cmnbiot
+  APN:                CMNBIOT
   IPv4 MTU:           1280
-  IPv4 address:       100.25.164.39
+  IPv4 address:       100.61.114.235
   IPv6 address:       ::
   IPv4 DNS address:   120.196.165.7, 221.179.38.7
   IPv6 DNS address:   ::, ::
@@ -154,16 +155,16 @@ ping -d makerdiary.com	# (1)!
 	Initiating ping to: makerdiary.com
 	Modem domain event: CE-level 0
 	RRC mode: Connected
-	Source IP addr: 100.19.132.199
+	Source IP addr: 100.61.114.235
 	Destination IP addr: 23.227.38.32
-	Pinging makerdiary.com results: time=0.316secs, payload sent: 0, payload received 0
-	Pinging makerdiary.com results: time=0.927secs, payload sent: 0, payload received 0
-	Pinging makerdiary.com results: time=0.912secs, payload sent: 0, payload received 0
-	Pinging makerdiary.com results: time=0.907secs, payload sent: 0, payload received 0
+	Pinging makerdiary.com results: time=0.360secs, payload sent: 0, payload received 0
+	Pinging makerdiary.com results: time=0.720secs, payload sent: 0, payload received 0
+	Pinging makerdiary.com results: time=0.543secs, payload sent: 0, payload received 0
+	Pinging makerdiary.com results: time=0.576secs, payload sent: 0, payload received 0
 	Ping statistics for makerdiary.com:
 		Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)
 	Approximate round trip times in milli-seconds:
-		Minimum = 316ms, Maximum = 927ms, Average = 765ms
+		Minimum = 360ms, Maximum = 720ms, Average = 549ms
 	Pinging DONE
 	```
 

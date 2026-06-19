@@ -88,10 +88,10 @@ The following sections show the typical use cases with pyOCD:
 
 	``` { .bash .no-copy linenums="1" title="Terminal" }
 	pyocd list
-	#   Probe/Board              Unique ID               Target
+	#   Probe/Board                  Unique ID             Target
 	----------------------------------------------------------------
-	0   ZEPHYR IFMCU CMSIS-DAP   820D9A5F0E38432F280DB   ✔︎ nrf91
-		Makerdiary               nRF9151 Connect Kit
+	0   Makerdiary IFMCU CMSIS-DAP   33551C50AA7495F6      ✔︎ nrf91
+		Makerdiary                   nRF9151 Connect Kit
 	```
 
 - To program the nRF9151 SiP application firmware, use `pyocd load`:
@@ -103,7 +103,7 @@ The following sections show the typical use cases with pyOCD:
 - To update the nRF9151 SiP modem firmware, run the following command:
 
 	``` bash
-	pyocd cmd -t nrf91 -c 'nrf91-update-modem-fw -f mfw_nrf91x1_2.0.2.zip' # (1)!
+	pyocd cmd -t nrf91 -c 'nrf91-update-modem-fw -f mfw_nrf91x1_2.0.4.zip' # (1)!
 	```
 
 	1.  If `-f` is specified, the modem firmware is written to the device, even if the correct version is already present.
@@ -189,8 +189,8 @@ Type ++tab++ to list all supported commands. When you type a command with `--hel
 ifsh:~$
   bootloader  cfgsync     charger     clear       device      help
   history     i2c         kernel      rem         reset       resize
-  retval      settings    shell       simdet      temp        version
-  viosel
+  retval      settings    shell       shutdown    simdet      temp
+  version     viosel
 ifsh:~$ charger --help
 charger - Charger commands
           Please refer to TI BQ25180 Datasheet for more details.
@@ -241,9 +241,11 @@ The following table describes all supported commands of the Interface Shell:
 | __`kernel sleep <ms>`__ | Kernel sleeps for <ms> millisecond. |
 | __`kernel thread list`__ | List kernel threads. |
 | __`kernel thread stacks`__ | List threads stack usage. |
+| __`kernel uptime`__ | Get Kernel uptime. Can be called with the `-p` or `--pretty` options. |
+| __`kernel version`__ | Get Kernel version. |
 | __`rem`__ | Ignore lines beginning with 'rem '. |
-| __`reset [nrf52820]`__ | Reset nRF52820. |
-| __`reset nrf9151`__ | Reset nRF9151 SiP. |
+| __`reset [nrf9151]`__ | Reset nRF9151 SiP. |
+| __`reset nrf52820`__ | Reset nRF52820. |
 | __`resize`__ | Console gets terminal screen size or assumes `default` in case the readout fails. It must be executed after each terminal width change to ensure correct text display. |
 | __`resize default`__ | Assume 80 chars screen width and send this setting to the terminal. |
 | __`retval`__ | Print return value of most recent command. |
@@ -259,6 +261,7 @@ The following table describes all supported commands of the Interface Shell:
 | __`shell echo`__ | Toggle shell echo. |
 | __`shell stats reset`__ | Reset shell statistics for the Logger module. |
 | __`shell stats show`__ | Get shell statistics for the Logger module. |
+| __`shutdown`__ | Put the IFMCU (nRF52820) in SYSTEM OFF mode. |
 | __`simdet`__ | Display nano-SIM Card status. |
 | __`temp`__ | Get the die temperature of the nRF52820. |
 | __`version [-a|--all]`__ | Show Interface MCU version. <br/> Use `-a` or `--all` option to show more details.|

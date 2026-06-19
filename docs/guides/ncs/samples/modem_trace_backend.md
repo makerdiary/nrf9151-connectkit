@@ -47,7 +47,7 @@ Use the following steps to build the [Modem Trace Backend] sample on the command
 	!!! Note
 		This sample has Cortex-M Security Extensions (CMSE) enabled and separates the firmware between Non-Secure Processing Environment (NSPE) and Secure Processing Environment (SPE). Because of this, it automatically includes the [Trusted Firmware-M (TF-M)].
 
-4. After building the sample successfully, the firmware with the name `merged.hex` can be found in the `build` directory.
+4. After building the sample successfully, the firmware with the name `tfm_merged.hex` can be found in the `build/modem_trace_backend/zephyr` directory.
 
 ## Flashing the firmware
 
@@ -61,7 +61,7 @@ west flash
 	In case you wonder, the `west flash` will execute the following command:
 
 	``` bash
-	pyocd load --target nrf91 --frequency 4000000 build/merged.hex
+	pyocd load --target nrf91 --frequency 4000000 build/modem_trace_backend/zephyr/tfm_merged.hex
 	```
 
 ## Testing
@@ -98,28 +98,27 @@ After programming the sample, test it by performing the following steps:
 3. Observe the output of the terminal. You should see the output, similar to what is shown in the following:
 
 	``` { .txt .no-copy linenums="1" title="Terminal" }
-	All pins have been configured as non-secure
-	Booting TF-M v2.1.0
-	[Sec Thread] Secure image initializing!
-	TF-M Float ABI: Hard
-	Lazy stacking enabled
-	*** Booting nRF Connect SDK v2.9.99-98a5e50b9ac1 ***
-	*** Using Zephyr OS v3.7.99-693769a5c735 ***
+	[INF] All pins have been configured as non-secure
+	[NOT] Booting TF-M v2.3.0**
+	[NOT] Built Thu 18 Jun 2026 06:31:57 UTC
+	[INF] Float ABI: Hard, Lazy stacking enabled
+	*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
+	*** Using Zephyr OS v4.4.0-14033cef1f73 ***
 	Modem trace backend sample started
 	Initializing modem library
 	Custom trace backend initialized
 	Connecting to network
 	LTE mode changed to 1
-	Traces received:  11.9kB, 23.8kB/s, CPU-load:  2.65%
-	Traces received:  15.2kB,  6.6kB/s, CPU-load:  1.03%
-	Traces received:  18.4kB,  6.3kB/s, CPU-load:  1.03%
-	Traces received:  26.2kB, 15.5kB/s, CPU-load:  0.99%
-	Traces received:  27.9kB,  3.3kB/s, CPU-load:  0.94%
-	Traces received:  66.5kB, 76.4kB/s, CPU-load:  2.67%
-	Traces received: 103.7kB, 73.7kB/s, CPU-load:  2.79%
-	Traces received: 141.7kB, 75.2kB/s, CPU-load:  2.89%
-	Traces received: 180.0kB, 76.1kB/s, CPU-load:  2.83%
-	Traces received: 217.9kB, 74.9kB/s, CPU-load:  2.83%
+	Traces received:  11.9kB, 23.7kB/s, CPU-load:  2.72%
+	Traces received:  15.1kB,  6.4kB/s, CPU-load:  0.96%
+	Traces received:  18.2kB,  6.1kB/s, CPU-load:  0.93%
+	Traces received:  29.5kB, 22.5kB/s, CPU-load:  1.16%
+	Traces received:  54.0kB, 48.4kB/s, CPU-load:  2.47%
+	Traces received:  78.4kB, 48.5kB/s, CPU-load:  2.44%
+	Traces received: 112.9kB, 68.2kB/s, CPU-load:  3.93%
+	Traces received: 148.3kB, 70.3kB/s, CPU-load:  3.85%
+	Traces received: 185.2kB, 72.9kB/s, CPU-load:  4.08%
+	Traces received: 219.9kB, 68.8kB/s, CPU-load:  3.86%
 	LTE mode changed to 0
 	Custom trace backend deinitialized
 	Bye

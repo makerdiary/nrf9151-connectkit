@@ -92,8 +92,8 @@ After programming the sample, test it by performing the following steps:
 3. Press the __USR/P25__ button and observe the output of the terminal. You should see the output, similar to what is shown in the following:
 
 	``` { .txt .no-copy linenums="1" title="Terminal" }
-	*** Booting nRF Connect SDK v2.9.99-98a5e50b9ac1 ***
-	*** Using Zephyr OS v3.7.99-693769a5c735 ***
+	*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
+	*** Using Zephyr OS v4.4.0-14033cef1f73 ***
 	Set up button at gpio@842500 pin 25
 	Press the button
 	Button pressed at 500938

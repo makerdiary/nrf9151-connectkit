@@ -58,7 +58,7 @@ Use the following steps to build the [MQTT] sample on the command line.
 	!!! Note
 		This sample has Cortex-M Security Extensions (CMSE) enabled and separates the firmware between Non-Secure Processing Environment (NSPE) and Secure Processing Environment (SPE). Because of this, it automatically includes the [Trusted Firmware-M (TF-M)].
 
-4. After building the sample successfully, the firmware with the name `merged.hex` can be found in the `build` directory.
+4. After building the sample successfully, the firmware with the name `tfm_merged.hex` can be found in the `build/mqtt/zephyr` directory.
 
 ## Flashing the firmware
 
@@ -72,7 +72,7 @@ west flash
 	In case you wonder, the `west flash` will execute the following command:
 
 	``` bash
-	pyocd load --target nrf91 --frequency 4000000 build/merged.hex
+	pyocd load --target nrf91 --frequency 4000000 build/mqtt/zephyr/tfm_merged.hex
 	```
 
 ## Testing
@@ -143,89 +143,94 @@ After programming the sample, test it by performing the following steps:
 	=== "Unencrypted (default)"
 
 		``` { .txt .no-copy linenums="1" title="Terminal" }
-		All pins have been configured as non-secure
-		Booting TF-M v2.1.0
-		[Sec Thread] Secure image initializing!
-		*** Booting nRF Connect SDK v2.9.99-98a5e50b9ac1 ***
-		*** Using Zephyr OS v3.7.99-693769a5c735 ***
-		[00:00:00.379,119] <inf> network: Bringing network interface up and connecting to the network
+		[INF] All pins have been configured as non-secure
+		[NOT] Booting TF-M v2.3.0**
+		[NOT] Built Thu 18 Jun 2026 07:15:56 UTC
+		*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
+		*** Using Zephyr OS v4.4.0-14033cef1f73 ***
+		[00:00:00.357,727] <inf> network: Bringing network interface up and connecting to the network
 		+CGEV: EXCE STATUS 0
 		%MDMEV: SEARCH STATUS 1
-		+CEREG: 2,"1D23","0D71994D",9
+		+CEREG: 2,"1D23","0D70394B",9
 		%MDMEV: PRACH CE-LEVEL 0
 		+CSCON: 1
 		+CGEV: ME PDN ACT 0,0
 		+CNEC_ESM: 50,0
 		%MDMEV: SEARCH STATUS 2
-		+CEREG: 1,"1D23","0D71994D",9,,,"00100001","00000110"
-		[00:01:28.466,186] <inf> network: Network connectivity established
-		%MDMEV: PRACH CE-LEVEL 1
-		[00:01:38.957,092] <inf> transport: Connected to MQTT broker
-		[00:01:38.957,153] <inf> transport: Hostname: test.mosquitto.org
-		[00:01:38.957,183] <inf> transport: Client ID: 359404230074347
-		[00:01:38.957,214] <inf> transport: Port: 1883
-		[00:01:38.957,244] <inf> transport: TLS: No
-		[00:01:38.957,305] <inf> transport: Subscribing to: 359404230074347/my/subscribe/topic
-		[00:01:39.359,863] <inf> transport: Subscribed to topic 359404230074347/my/subscribe/topic
-		%MDMEV: PRACH CE-LEVEL 0
-		%MDMEV: PRACH CE-LEVEL 1
-		[00:02:00.381,530] <inf> transport: Published message: "Hello MQTT! Current uptime is: 120380" on topic: "359404230074347/my/publish/topic"
-		%MDMEV: PRACH CE-LEVEL 0
+		+CEREG: 1,"1D23","0D70394B",9,,,"00100001","00000110"
+		[00:01:20.458,129] <inf> network: Network connectivity established
+		[00:01:26.784,210] <inf> transport: Connected to MQTT broker
+		[00:01:26.784,240] <inf> transport: Hostname: test.mosquitto.org
+		[00:01:26.784,301] <inf> transport: Client ID: 359404230074347
+		[00:01:26.784,301] <inf> transport: Port: 1883
+		[00:01:26.784,332] <inf> transport: TLS: No
+		[00:01:26.784,393] <inf> transport: Subscribing to: 359404230074347/my/subscribe/topic
+		[00:01:27.118,774] <inf> transport: Subscribed to topic 359404230074347/my/subscribe/topic
 		+CSCON: 0
-		+CEREG: 1,"1D23","0D70394D",9,,,"00100001","00000110"
-		[00:03:00.387,939] <inf> transport: Published message: "Hello MQTT! Current uptime is: 180380" on topic: "359404230074347/my/publish/topic"
-		%MDMEV: PRACH CE-LEVEL 1
-		+CSCON: 1
-		[00:03:23.481,872] <inf> transport: Published message: "Hello MQTT! Current uptime is: 203480" on topic: "359404230074347/my/publish/topic"
-		[00:03:35.287,353] <inf> transport: Published message: "Hello MQTT! Current uptime is: 215285" on topic: "359404230074347/my/publish/topic"
-		%MDMEV: PRACH CE-LEVEL 0
-		...
-		[00:19:00.321,899] <inf> transport: Published message: "Hello MQTT! Current uptime is: 1140311" on topic: "359404230074347/my/publish/topic"
+		[00:02:00.366,760] <inf> transport: Published message: "Hello MQTT! Current uptime is: 120359" on topic: "359404230074347/my/publish/topic"
 		%MDMEV: PRACH CE-LEVEL 0
 		+CSCON: 1
+		[00:02:01.684,906] <inf> transport: Published message: "Hello MQTT! Current uptime is: 121683" on topic: "359404230074347/my/publish/topic"
+		[00:02:05.042,236] <inf> transport: Published message: "Hello MQTT! Current uptime is: 125040" on topic: "359404230074347/my/publish/topic"
+		[00:02:08.388,519] <inf> transport: Published message: "Hello MQTT! Current uptime is: 128387" on topic: "359404230074347/my/publish/topic"
 		+CSCON: 0
 		%MDMEV: PRACH CE-LEVEL 0
 		+CSCON: 1
-		[00:19:26.168,121] <inf> transport: Received payload: Hello from MQTTX! on topic: 359404230074347/my/subscribe/topic
-		[00:19:30.233,001] <inf> transport: Received payload: Hello from MQTTX! on topic: 359404230074347/my/subscribe/topic
-		+CSCON: 0
+		[00:02:53.942,626] <inf> transport: Received payload: Hello from MQTTX! on topic: 359404230074347/my/subscribe/topic
+		[00:02:57.680,603] <inf> transport: Received payload: Hello from MQTTX! on topic: 359404230074347/my/subscribe/topic
+		[00:03:00.234,710] <inf> transport: Received payload: Hello from MQTTX! on topic: 359404230074347/my/subscribe/topic
 		...
 		```
 
 	=== "Encrypted"
 
 		``` { .txt .no-copy linenums="1" title="Terminal" }
-		All pins have been configured as non-secure
-		Booting TF-M v2.1.0
-		[Sec Thread] Secure image initializing!
-		*** Booting nRF Connect SDK v2.9.99-98a5e50b9ac1 ***
-		*** Using Zephyr OS v3.7.99-693769a5c735 ***
-		[00:00:00.344,024] <inf> network: Bringing network interface up and connecting to the network
+		[INF] All pins have been configured as non-secure
+		[NOT] Booting TF-M v2.3.0**
+		[NOT] Built Thu 18 Jun 2026 07:29:18 UTC
+		*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
+		*** Using Zephyr OS v4.4.0-14033cef1f73 ***
+		[00:00:00.360,321] <inf> network: Bringing network interface up and connecting to the network
 		+CGEV: EXCE STATUS 0
 		%MDMEV: SEARCH STATUS 1
-		+CEREG: 2,"1D28","0AC2CF3F",9
+		+CEREG: 2,"1D23","0D70394B",9
 		%MDMEV: PRACH CE-LEVEL 0
 		+CSCON: 1
 		+CGEV: ME PDN ACT 0,0
 		+CNEC_ESM: 50,0
 		%MDMEV: SEARCH STATUS 2
-		+CEREG: 1,"1D28","0AC2CF3F",9,,,"00100001","00000110"
-		[00:01:21.760,620] <inf> network: Network connectivity established
-		[00:01:30.966,186] <inf> transport: Connected to MQTT broker
-		[00:01:30.966,217] <inf> transport: Hostname: test.mosquitto.org
-		[00:01:30.966,278] <inf> transport: Client ID: 359404230074347
-		[00:01:30.966,278] <inf> transport: Port: 8883
-		[00:01:30.966,308] <inf> transport: TLS: Yes
-		[00:01:30.966,369] <inf> transport: Subscribing to: 359404230074347/my/subscribe/topic
-		[00:01:31.401,245] <inf> transport: Subscribed to topic 359404230074347/my/subscribe/topic
+		+CEREG: 1,"1D23","0D70394B",9,,,"00100001","00000110"
+		[00:01:18.839,080] <inf> network: Network connectivity established
+		[00:01:27.249,084] <inf> transport: Connected to MQTT broker
+		[00:01:27.249,145] <inf> transport: Hostname: test.mosquitto.org
+		[00:01:27.249,176] <inf> transport: Client ID: 359404230074347
+		[00:01:27.249,176] <inf> transport: Port: 8883
+		[00:01:27.249,206] <inf> transport: TLS: Yes
+		[00:01:27.249,267] <inf> transport: Subscribing to: 359404230074347/my/subscribe/topic
+		[00:01:27.568,969] <inf> transport: Subscribed to topic 359404230074347/my/subscribe/topic
 		+CSCON: 0
-		[00:02:00.352,905] <inf> transport: Published message: "Hello MQTT! Current uptime is: 120345" on topic: "359404230074347/my/publish/topic"
 		%MDMEV: PRACH CE-LEVEL 0
 		+CSCON: 1
-		[00:02:19.722,869] <inf> transport: Published message: "Hello MQTT! Current uptime is: 139721" on topic: "359404230074347/my/publish/topic"
-		[00:02:26.478,454] <inf> transport: Published message: "Hello MQTT! Current uptime is: 146476" on topic: "359404230074347/my/publish/topic"
-		[00:02:30.345,581] <inf> transport: Received payload: Hello from MQTTX! on topic: 359404230074347/my/subscribe/topic
-		[00:02:33.788,696] <inf> transport: Received payload: Hello from MQTTX! on topic: 359404230074347/my/subscribe/topic
+		[00:02:00.364,105] <inf> transport: Published message: "Hello MQTT! Current uptime is: 120361" on topic: "359404230074347/my/publish/topic"
+		+CSCON: 0
+		%MDMEV: PRACH CE-LEVEL 0
+		+CSCON: 1
+		+CSCON: 0
+		[00:03:00.370,208] <inf> transport: Published message: "Hello MQTT! Current uptime is: 180362" on topic: "359404230074347/my/publish/topic"
+		%MDMEV: PRACH CE-LEVEL 0
+		+CSCON: 1
+		+CSCON: 0
+		%MDMEV: PRACH CE-LEVEL 0
+		+CSCON: 1
+		[00:03:49.814,117] <inf> transport: Published message: "Hello MQTT! Current uptime is: 229812" on topic: "359404230074347/my/publish/topic"
+		[00:03:51.194,488] <inf> transport: Published message: "Hello MQTT! Current uptime is: 231192" on topic: "359404230074347/my/publish/topic"
+		[00:03:52.093,536] <inf> transport: Published message: "Hello MQTT! Current uptime is: 232091" on topic: "359404230074347/my/publish/topic"
+		[00:03:53.693,298] <inf> transport: Published message: "Hello MQTT! Current uptime is: 233691" on topic: "359404230074347/my/publish/topic"
+		[00:04:00.364,654] <inf> transport: Published message: "Hello MQTT! Current uptime is: 240362" on topic: "359404230074347/my/publish/topic"
+		[00:04:18.631,286] <inf> transport: Received payload: Hello from MQTTX! on topic: 359404230074347/my/subscribe/topic
+		[00:04:22.194,335] <inf> transport: Received payload: Hello from MQTTX! on topic: 359404230074347/my/subscribe/topic
+		[00:04:23.304,351] <inf> transport: Received payload: Hello from MQTTX! on topic: 359404230074347/my/subscribe/topic
+		[00:04:23.615,905] <inf> transport: Received payload: Hello from MQTTX! on topic: 359404230074347/my/subscribe/topic
 		...
 		```
 

@@ -39,41 +39,29 @@ The current minimum required version for the main dependencies are:
 | Tool                  | Min. Version |
 |-----------------------|--------------|
 | [CMake]               | 3.20.5       |
-| [Python]              | 3.10         |
+| [Python]              | 3.12         |
 | [Devicetree compiler] | 1.4.6        |
 
 === "Windows"
 
-	[Chocolatey] is recommended to install dependencies here. If Chocolatey isn’t an option, you can install dependencies from their respective websites and ensure the command line tools added in your __`PATH`__ environment variable.
+	In modern version of Windows (10 and later) it is recommended to install the Windows Terminal application from the Microsoft Store. Instructions are provided for a `cmd.exe` or PowerShell command prompts.
 
-	1. [Install chocolatey].
+	These instructions rely on Windows' official package manager, [winget]. If using winget isn’t an option, you can install dependencies from their respective websites and ensure the command line tools are on your __`PATH`__ environment variable.
 
-	2. Open a `cmd.exe` window as __Administrator__. To do so, press the Windows key ++win++ , type `cmd.exe`, right-click the result, and choose __Run as Administrator__.
+	1. In modern Windows versions, `winget` is already pre-installed by default. You can verify that this is the case by typing `winget` in a terminal window. If that fails, you can then [install winget].
 
-	3. Disable global confirmation to avoid having to confirm the installation of individual programs:
+	2. Open a Command Prompt (`cmd.exe`) or PowerShell terminal window. To do so, press the Windows key ++win++ , type `cmd.exe` or PowerShell and click on the result.
 
-		``` bat
-		choco feature enable -n allowGlobalConfirmation
+	3. Use `winget` to install the required dependencies:
+
+		``` cmd
+		winget install Kitware.CMake Ninja-build.Ninja oss-winget.gperf Python.Python.3.12 Git.Git oss-winget.dtc wget 7zip.7zip
 		```
+	
+	4. Close the terminal window.
 
-	4. Use `choco` to install the required dependencies:
-
-		``` bat linenums="1"
-		choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
-		```
-
-		``` bat linenums="2"
-		choco install ninja gperf python311 git dtc-msys2 wget 7zip
-		```
-
-	5. Close the terminal window and open a new `cmd.exe` window __as a regular user__ to continue.
-
-	!!! Tip
-		To check the list of installed packages and their versions, run the following command:
-
-		``` bat
-		choco list -lo
-		```
+	!!! Note
+		You may need to add the 7zip installation folder to your __`PATH`__.
 
 === "macOS"
 
@@ -129,30 +117,19 @@ The current minimum required version for the main dependencies are:
 		```
 
 === "Ubuntu"
-
-	1. If using an Ubuntu version older than 22.04, it is necessary to add extra repositories to meet the minimum required versions for the main dependencies listed above. In that case, download, inspect and execute the Kitware archive script to add the Kitware APT repository to your sources list. A detailed explanation of `kitware-archive.sh` can be found here [kitware third-party apt repository]:
-
-		``` bash linenums="1"
-		wget https://apt.kitware.com/kitware-archive.sh
-		```
-
-		``` bash linenums="2"
-		sudo bash kitware-archive.sh
-		```
     
-	2. Use `apt` to install the required dependencies:
+	1. Use `apt` to install the required dependencies:
 
 		``` bash linenums="1"
 		sudo apt install --no-install-recommends git cmake ninja-build gperf \
-		ccache dfu-util device-tree-compiler wget \
-		python3-dev python3-pip python3-setuptools python3-tk python3-wheel xz-utils file \
-		make gcc gcc-multilib g++-multilib libsdl2-dev libmagic1
+		  ccache dfu-util device-tree-compiler wget python3-dev python3-venv python3-tk \
+		  xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev libmagic1
 		```
 
 		!!! Note
-			Due to the unavailability of `gcc-multilib` and `g++-multilib` on AArch64 (ARM64) systems, you may need to remove them from the list of packages to install.
+			Due to the unavailability of `gcc-multilib` and `g++-multilib` on AArch64 (ARM64) systems, you may need to omit them from the list of packages to install.
 
-	3. Verify the versions of the main dependencies installed on your system by entering:
+	2. Verify the versions of the main dependencies installed on your system by entering:
 
 		``` bash linenums="1"
 		cmake --version
@@ -166,6 +143,8 @@ The current minimum required version for the main dependencies are:
 		dtc --version
 		```
 
+		Check those against the versions in the table in the beginning of this section. Refer to the [Install Linux Host Dependencies] page for additional information on updating the dependencies manually.
+
 ## Get the code and install Python dependencies
 
 To help you quickly build and run the samples on the nRF9151 Connect Kit, the primary [nrf9151-connectkit] repository contains the nRF Connect SDK manifest repositories, additional hardware drivers and tested samples, etc.
@@ -178,15 +157,46 @@ In the following instructions the name `NCS-Project` is used for the workspace, 
 
 	2. Create a new virtual environment:
 
-		``` bat
-		python -m venv NCS-Project\.venv
-		```
+		=== "Batchfile"
+
+			``` bat linenums="1"
+			cd %HOMEPATH%
+			```
+
+			``` bat linenums="2"
+			py -3.12 -m venv NCS-Project\.venv
+			```
+
+		=== "PowerShell"
+
+			``` bat linenums="1"
+			cd $Env:HOMEPATH
+			```
+
+			``` bat linenums="2"
+			py -3.12 -m venv NCS-Project\.venv
+			```
 
 	3. Activate the virtual environment:
 
-		``` bat
-		NCS-Project\.venv\Scripts\activate.bat
-		```
+		!!! Note
+			Python’s virtual environment activation in PowerShell requires running a script itself, which needs to be allowed.
+
+			``` bat
+			Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+			```
+
+		=== "Batchfile"
+
+			``` bat
+			NCS-Project\.venv\Scripts\activate.bat
+			```
+
+		=== "PowerShell"
+
+			``` bat
+			NCS-Project\.venv\Scripts\Activate.ps1
+			```
 
 		Once activated your shell will be prefixed with `(.venv)`. The virtual environment can be deactivated at any time by running `deactivate`.
 
@@ -206,10 +216,10 @@ In the following instructions the name `NCS-Project` is used for the workspace, 
 		```
 
 		!!! Tip
-			You can initialize `west` with the revision of the project that you want to check out. For example, to check out the `v1.0.0` release, use the following command instead:
+			You can initialize `west` with the revision of the project that you want to check out. For example, to check out the `v2.0.0` release, use the following command instead:
 
 			``` bat
-			west init -m https://github.com/makerdiary/nrf9151-connectkit --mr v1.0.0 NCS-Project
+			west init -m https://github.com/makerdiary/nrf9151-connectkit --mr v2.0.0 NCS-Project
 			```
 
 	6. Enter the following commands to clone the project repositories:
@@ -246,11 +256,22 @@ In the following instructions the name `NCS-Project` is used for the workspace, 
 		west zephyr-export
 		```
 
-	8. The Zephyr west extension command `west packages` can be used to install Python dependencies.
+	8. Install Python dependencies using `west packages`.
 
-		``` bat
-		west packages pip --install
-		```
+		=== "Batchfile"
+
+			``` bat
+			cmd /c zephyr\scripts\utils\west-packages-pip-install.cmd
+			```
+
+		=== "PowerShell"
+
+			``` bat
+			python -m pip install @((west packages pip) -split ' ')
+			```
+		
+		!!! Note
+			This could downgrade or upgrade west itself.
 
 === "macOS"
 
@@ -284,10 +305,10 @@ In the following instructions the name `NCS-Project` is used for the workspace, 
 		```
 
 		!!! Tip
-			You can initialize `west` with the revision of the project that you want to check out. For example, to check out the `v1.0.0` release, use the following command instead:
+			You can initialize `west` with the revision of the project that you want to check out. For example, to check out the `v2.0.0` release, use the following command instead:
 
 			``` bash
-			west init -m https://github.com/makerdiary/nrf9151-connectkit --mr v1.0.0 NCS-Project
+			west init -m https://github.com/makerdiary/nrf9151-connectkit --mr v2.0.0 NCS-Project
 			```
 
 	5. Enter the following commands to clone the project repositories:
@@ -324,27 +345,24 @@ In the following instructions the name `NCS-Project` is used for the workspace, 
 		west zephyr-export
 		```
 
-	7. The Zephyr west extension command `west packages` can be used to install Python dependencies.
+	7. Install Python dependencies using `west packages`.
 
 		``` bash
 		west packages pip --install
 		```
 
+		!!! Note
+			This could downgrade or upgrade west itself.
+
 === "Ubuntu"
 
-	1. Use `apt` to install Python `venv` package:
-
-		``` bash
-		sudo apt install python3-venv
-		```
-
-	2. Create a new virtual environment:
+	1. Create a new virtual environment:
 
 		``` bash
 		python3 -m venv ~/NCS-Project/.venv
 		```
 
-	3. Activate the virtual environment:
+	2. Activate the virtual environment:
 
 		``` bash
 		source ~/NCS-Project/.venv/bin/activate
@@ -355,26 +373,26 @@ In the following instructions the name `NCS-Project` is used for the workspace, 
 		!!! Note
 			Remember to activate the virtual environment every time you start working.
 
-	4. Install `west`:
+	3. Install `west`:
 
 		``` bash
 		pip install west
 		```
 
-	5. Get the latest source code:
+	4. Get the latest source code:
 
 		``` bash
 		west init -m https://github.com/makerdiary/nrf9151-connectkit --mr main NCS-Project
 		```
 
 		!!! Tip
-			You can initialize `west` with the revision of the project that you want to check out. For example, to check out the `v1.0.0` release, use the following command instead:
+			You can initialize `west` with the revision of the project that you want to check out. For example, to check out the `v2.0.0` release, use the following command instead:
 
 			``` bash
-			west init -m https://github.com/makerdiary/nrf9151-connectkit --mr v1.0.0 NCS-Project
+			west init -m https://github.com/makerdiary/nrf9151-connectkit --mr v2.0.0 NCS-Project
 			```
 
-	6. Enter the following commands to clone the project repositories:
+	5. Enter the following commands to clone the project repositories:
 
 		``` bash linenums="1"
 		cd NCS-Project
@@ -402,35 +420,50 @@ In the following instructions the name `NCS-Project` is used for the workspace, 
 
 		``` 
 
-	7. Export a [Zephyr CMake package]. This allows CMake to automatically load boilerplate code required for building Zephyr applications.
+	6. Export a [Zephyr CMake package]. This allows CMake to automatically load boilerplate code required for building Zephyr applications.
 
 		``` bash
 		west zephyr-export
 		```
 
-	8. The Zephyr west extension command `west packages` can be used to install Python dependencies.
+	7. Install Python dependencies using `west packages`.
 
 		``` bash
 		west packages pip --install
 		```
 
+		!!! Note
+			This could downgrade or upgrade west itself.
+
 ## Install the Zephyr SDK
 
 The [Zephyr Software Development Kit (SDK)] contains toolchains for each of Zephyr’s supported architectures, which include a compiler, assembler, linker and other programs required to build Zephyr applications.
 
-For Linux, it also contains additional host tools, such as custom QEMU and OpenOCD builds that are used to emulate, flash and debug Zephyr applications.
+It also contains additional host tools, such as custom QEMU and OpenOCD builds that are used to emulate, flash and debug Zephyr applications.
 
 === "Windows"
 
 	Install the Zephyr SDK using the `west sdk install`.
 
-	``` bat linenums="1"
-	cd NCS-Project\zephyr
-	```
+	=== "Batchfile"
 
-	``` bat linenums="2"
-	west sdk install -t arm-zephyr-eabi
-	```
+		``` bat linenums="1"
+		cd %HOMEPATH%\NCS-Project\zephyr
+		```
+
+		``` bat linenums="2"
+		west sdk install -t arm-zephyr-eabi
+		```
+
+	=== "PowerShell"
+
+		``` bat linenums="1"
+		cd $Env:HOMEPATH\NCS-Project\zephyr
+		```
+
+		``` bat linenums="2"
+		west sdk install -t arm-zephyr-eabi
+		```
 
 === "macOS"
 
@@ -459,19 +492,34 @@ For Linux, it also contains additional host tools, such as custom QEMU and OpenO
 !!! Tip
 	Using the command options, you can specify the SDK installation destination and which architecture of toolchains to install. See `west sdk install --help` for details.
 
+!!! Note
+	If you want to install Zephyr SDK without using the `west sdk` command, please see [Zephyr SDK installation].
+
 ## Build the Hello World sample
 
 Now, you can build the [Hello World] sample with `west build`, specifying the board (following the `-b` option) as `nrf9151_connectkit/nrf9151`.
 
 === "Windows"
 
-	``` bat linenums="1"
-	cd NCS-Project\nrf9151-connectkit
-	```
+	=== "Batchfile"
 
-	``` bat linenums="2"
-	west build -p always -b nrf9151_connectkit/nrf9151 samples\hello_world
-	```
+		``` bat linenums="1"
+		cd %HOMEPATH%\NCS-Project\nrf9151-connectkit
+		```
+
+		``` bat linenums="2"
+		west build -p always -b nrf9151_connectkit/nrf9151 samples\hello_world
+		```
+
+	=== "PowerShell"
+
+		``` bat linenums="1"
+		cd $Env:HOMEPATH\NCS-Project\nrf9151-connectkit
+		```
+
+		``` bat linenums="2"
+		west build -p always -b nrf9151_connectkit/nrf9151 samples\hello_world
+		```
 
 === "macOS"
 
@@ -591,13 +639,14 @@ Explore more applications or samples running on the nRF9151 Connect Kit:
 [CMake]: https://cmake.org/
 [Python]: https://www.python.org/
 [Devicetree compiler]: https://www.devicetree.org/
-[Chocolatey]: https://chocolatey.org/
-[Install chocolatey]: https://chocolatey.org/install
+[winget]: https://learn.microsoft.com/en-us/windows/package-manager/
+[install winget]: https://aka.ms/getwinget
 [Homebrew]: https://brew.sh/
-[kitware third-party apt repository]: https://apt.kitware.com/
+[Install Linux Host Dependencies]: https://docs.zephyrproject.org/latest/develop/getting_started/installation_linux.html#installation-linux
 [nrf9151-connectkit]: https://github.com/makerdiary/nrf9151-connectkit
 [Python virtual environment]: https://docs.python.org/3/library/venv.html
 [Zephyr CMake package]: https://docs.zephyrproject.org/latest/build/zephyr_cmake_package.html#cmake-pkg
-[Zephyr Software Development Kit (SDK)]: https://github.com/zephyrproject-rtos/sdk-ng
+[Zephyr Software Development Kit (SDK)]: https://docs.zephyrproject.org/latest/develop/toolchains/zephyr_sdk.html#toolchain-zephyr-sdk
+[Zephyr SDK installation]: https://docs.zephyrproject.org/latest/develop/toolchains/zephyr_sdk.html#toolchain-zephyr-sdk-install
 [Hello World]: ./samples/hello_world.md
 [PuTTY]: https://apps.microsoft.com/store/detail/putty/XPFNZKSKLBP7RJ

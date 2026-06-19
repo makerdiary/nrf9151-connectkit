@@ -60,7 +60,7 @@ To update the bootloader, complete the following steps:
 
 2. It will mount as a Mass Storage Device called __UF2BOOT__. The RGB LED is breathing in red.
 
-3. Open `INFO_UF2.TXT` in the __UF2BOOT__ volume with a text editor, and check the current version of bootloader. The figure below shows we are running the `1.0.0` version.
+3. Open `INFO_UF2.TXT` in the __UF2BOOT__ volume with a text editor, and check the current version of bootloader. The figure below shows we are running the `1.1.0` version.
 
 	![](../../assets/images/uf2_bootloader_info.png)
 

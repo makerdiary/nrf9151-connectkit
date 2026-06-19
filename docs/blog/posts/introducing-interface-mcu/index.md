@@ -1,6 +1,6 @@
 ---
 title: Introducing Interface MCU
-date: 2024-03-10
+date: 2025-03-10
 authors:
   - makerdiary
 cover: cover.png

@@ -1,11 +1,15 @@
-# nRF9151 Connect Kit<br/><small>Versatile Prototyping Kit based on the nRF9151 SiP supporting LTE-M/NB-IoT Worldwide, DECT NR+ and GNSS</small>
+# nRF9151 Connect Kit<br/><small>Versatile Prototyping Kit based on the nRF9151 SiP supporting LTE-M/NB-IoT/NTN, DECT NR+ and GNSS</small>
+
+!!! Tip "Product Update Notification"
+    From June 18, 2026, all nRF9151 Connect Kits will ship with the nRF9151 SiP revision __A1__ (upgraded from __A0__ by Nordic Semiconductor), adding support for Non-Terrestrial Networks (NTN). See [Migrating from A0 to A1 Revision](./blog/posts/migrating-from-a0-to-a1-revision/index.md) for details. 
 
 ## Introduction
 
 nRF9151 Connect Kit is a versatile prototyping kit built around the [nRF9151] System-in-Package
-(SiP) which supports LTE-M, NB-IoT, GNSS, and DECT NR+, making it suitable for global use. It
-has LTE bands B1-B5, B8, B12, B13, B17-B20, B25, B26, B28, B65, B66 and B85 support, Arm
-TrustZone CryptoCell 310, unique modem features for further power saving and ease of use.
+(SiP), specifically designed for cellular IoT and DECT NR+ applications. Leveraging low power LTE
+technology, advanced processing capabilities, and robust security features, the nRF9151 offers
+unparalleled performance and versatility, and supports 3GPP release 14 LTE-M/NB-IoT,
+NB-NTN (Non-Terrestrial Network) and DECT NR+.
 
 The design comes with an Interface MCU built using the [nRF52820], which enables debug, programming
 as well as modem firmware update, no need for any external tools. The Interface MCU also includes a
@@ -30,9 +34,9 @@ and can be leveraged and modified to suit your specific needs.
 
 * Nordic Semiconductor nRF9151 SiP
 
-	- Fully integrated SiP with 64 MHz Arm Cortex-M33 and multimode LTE-M/NB-IoT modem with
-	  DECT NR+ support and GNSS
+	- Fully integrated SiP with 64 MHz Arm Cortex-M33 and multimode LTE-M/NB-IoT/NTN modem with DECT NR+ support and GNSS
 	- 700-2200 MHz LTE bands: B1-B5, B8, B12, B13, B17-B20, B25, B26, B28, B65, B66, B85
+	- NTN (Non-Terrestrial Networks) bands: B23/B252, B255, B256
 	- Power Class 5 20 dBm
 	- Power Class 3 23 dBm
 	- 1.9GHz NR+ band support

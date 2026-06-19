@@ -94,8 +94,8 @@ After programming the sample, test it by performing the following steps:
 3. Once the sample starts running, you should see the following output:
 
 	``` { .bash .no-copy linenums="1" title="Terminal" }
-	*** Booting nRF Connect SDK v2.9.99-98a5e50b9ac1 ***
-	*** Using Zephyr OS v3.7.99-693769a5c735 ***
+	*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
+	*** Using Zephyr OS v4.4.0-14033cef1f73 ***
 	uart:~$
 	```
 
@@ -103,7 +103,7 @@ After programming the sample, test it by performing the following steps:
 
 	``` { .txt .no-copy linenums="3" title="Terminal"}
 	uart:~$ version
-	Zephyr version 3.7.99
+	Zephyr version 4.4.0
 	```
 
 [Getting Started Guide]: ../getting-started.md

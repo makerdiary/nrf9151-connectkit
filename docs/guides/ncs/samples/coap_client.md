@@ -55,7 +55,7 @@ Use the following steps to build the [CoAP Client] sample on the command line.
 	!!! Note
 		This sample has Cortex-M Security Extensions (CMSE) enabled and separates the firmware between Non-Secure Processing Environment (NSPE) and Secure Processing Environment (SPE). Because of this, it automatically includes the [Trusted Firmware-M (TF-M)].
 
-4. After building the sample successfully, the firmware with the name `merged.hex` can be found in the `build` directory.
+4. After building the sample successfully, the firmware with the name `tfm_merged.hex` can be found in the `build/coap_client/zephyr` directory.
 
 ## Flashing the firmware
 
@@ -69,7 +69,7 @@ west flash
 	In case you wonder, the `west flash` will execute the following command:
 
 	``` bash
-	pyocd load --target nrf91 --frequency 4000000 build/merged.hex
+	pyocd load --target nrf91 --frequency 4000000 build/coap_client/zephyr/tfm_merged.hex
 	```
 
 ## Testing
@@ -106,29 +106,31 @@ After programming the sample, test it by performing the following steps:
 3. Observe the output of the terminal. You should see the output, similar to what is shown in the following:
 
 	``` { .txt .no-copy linenums="1" title="Terminal" }
-	All pins have been configured as non-secure
-	Booting TF-M v2.1.0
-	[Sec Thread] Secure image initializing!
-	*** Booting nRF Connect SDK v2.9.99-98a5e50b9ac1 ***
-	*** Using Zephyr OS v3.7.99-693769a5c735 ***
-	[00:00:00.276,611] <inf> coap_client_sample: The CoAP client sample started
-	[00:00:00.276,641] <inf> coap_client_sample: Bringing network interface up and connecting to the network
-	[00:00:00.606,689] <inf> coap_client_sample: Waiting for network connectivity
-	[00:01:29.888,641] <inf> coap_client_sample: Network connectivity established
-	[00:01:31.571,136] <inf> coap_client_sample: IPv4 Address found 20.47.97.44
-	[00:01:31.571,594] <inf> coap_client_sample: Initializing CoAP client
-	[00:01:31.573,699] <inf> coap_client_sample: CoAP GET request sent sent to californium.eclipseprojects.io, resource: obs
-	[00:01:31.906,280] <inf> coap_client_sample: CoAP response: code: 0x45, payload: 07:30:40
-	[00:01:36.575,897] <inf> coap_client_sample: CoAP GET request sent sent to californium.eclipseprojects.io, resource: obs
-	[00:01:37.554,443] <inf> coap_client_sample: CoAP response: code: 0x45, payload: 07:30:45
-	[00:01:41.578,094] <inf> coap_client_sample: CoAP GET request sent sent to californium.eclipseprojects.io, resource: obs
-	[00:01:42.045,623] <inf> coap_client_sample: CoAP response: code: 0x45, payload: 07:30:50
-	[00:01:46.580,322] <inf> coap_client_sample: CoAP GET request sent sent to californium.eclipseprojects.io, resource: obs
-	[00:01:47.234,832] <inf> coap_client_sample: CoAP response: code: 0x45, payload: 07:30:55
-	[00:01:51.582,550] <inf> coap_client_sample: CoAP GET request sent sent to californium.eclipseprojects.io, resource: obs
-	[00:01:52.324,981] <inf> coap_client_sample: CoAP response: code: 0x45, payload: 07:31:00
-	[00:01:56.584,747] <inf> coap_client_sample: CoAP GET request sent sent to californium.eclipseprojects.io, resource: obs
-	[00:01:57.122,161] <inf> coap_client_sample: CoAP response: code: 0x45, payload: 07:31:05
+	[INF] All pins have been configured as non-secure
+	[NOT] Booting TF-M v2.3.0**
+	[NOT] Built Thu 18 Jun 2026 07:02:04 UTC
+	*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
+	*** Using Zephyr OS v4.4.0-14033cef1f73 ***
+	[00:00:00.258,605] <inf> coap_client_sample: The CoAP client sample started
+	[00:00:00.258,636] <inf> coap_client_sample: Bringing network interface up and connecting to the network
+	[00:00:00.590,240] <inf> coap_client_sample: Waiting for network connectivity
+	[00:01:20.251,007] <inf> coap_client_sample: Network connectivity established
+	[00:01:21.055,175] <inf> coap_client_sample: IPv4 Address found 20.47.97.44
+	[00:01:21.055,480] <inf> coap_client_sample: Initializing CoAP client
+	[00:01:21.057,678] <inf> coap_client_sample: CoAP GET request sent sent to californium.eclipseprojects.io, resource: obs
+	[00:01:21.418,334] <inf> coap_client_sample: CoAP response: code: 0x45, payload: 07:04:42
+	[00:01:26.060,058] <inf> coap_client_sample: CoAP GET request sent sent to californium.eclipseprojects.io, resource: obs
+	[00:01:26.587,524] <inf> coap_client_sample: CoAP response: code: 0x45, payload: 07:04:47
+	[00:01:31.062,377] <inf> coap_client_sample: CoAP GET request sent sent to californium.eclipseprojects.io, resource: obs
+	[00:01:31.710,662] <inf> coap_client_sample: CoAP response: code: 0x45, payload: 07:04:52
+	[00:01:36.064,605] <inf> coap_client_sample: CoAP GET request sent sent to californium.eclipseprojects.io, resource: obs
+	[00:01:36.507,812] <inf> coap_client_sample: CoAP response: code: 0x45, payload: 07:04:57
+	[00:01:41.066,802] <inf> coap_client_sample: CoAP GET request sent sent to californium.eclipseprojects.io, resource: obs
+	[00:01:41.631,958] <inf> coap_client_sample: CoAP response: code: 0x45, payload: 07:05:02
+	[00:01:46.068,969] <inf> coap_client_sample: CoAP GET request sent sent to californium.eclipseprojects.io, resource: obs
+	[00:01:46.747,100] <inf> coap_client_sample: CoAP response: code: 0x45, payload: 07:05:07
+	[00:01:51.071,228] <inf> coap_client_sample: CoAP GET request sent sent to californium.eclipseprojects.io, resource: obs
+	[00:01:51.558,258] <inf> coap_client_sample: CoAP response: code: 0x45, payload: 07:05:12
 	...
 	```
 

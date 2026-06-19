@@ -46,7 +46,7 @@ Use the following steps to build the [AT Client] sample on the command line.
 	!!! Note
 		This sample has Cortex-M Security Extensions (CMSE) enabled and separates the firmware between Non-Secure Processing Environment (NSPE) and Secure Processing Environment (SPE). Because of this, it automatically includes the [Trusted Firmware-M (TF-M)].
 
-4. After building the sample successfully, the firmware with the name `merged.hex` can be found in the `build` directory.
+4. After building the sample successfully, the firmware with the name `tfm_merged.hex` can be found in the `build/at_client/zephyr` directory.
 
 ## Flashing the firmware
 
@@ -60,7 +60,7 @@ west flash
 	In case you wonder, the `west flash` will execute the following command:
 
 	``` bash
-	pyocd load --target nrf91 --frequency 4000000 build/merged.hex
+	pyocd load --target nrf91 --frequency 4000000 build/at_client/zephyr/tfm_merged.hex
 	```
 
 ## Testing
@@ -97,11 +97,11 @@ After programming the sample, test it by performing the following steps:
 3. Once the sample starts running, you should see the following output:
 
 	``` { .bash .no-copy linenums="1" title="Terminal" }
-	All pins have been configured as non-secure
-	Booting TF-M v2.1.0
-	[Sec Thread] Secure image initializing!
-	*** Booting nRF Connect SDK v2.9.99-98a5e50b9ac1 ***
-	*** Using Zephyr OS v3.7.99-693769a5c735 ***
+	[INF] All pins have been configured as non-secure
+	[NOT] Booting TF-M v2.3.0**
+	[NOT] Built Thu 18 Jun 2026 05:49:40 UTC
+	*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
+	*** Using Zephyr OS v4.4.0-14033cef1f73 ***
 	The AT host sample started
 	Ready
 	```
@@ -129,16 +129,34 @@ After programming the sample, test it by performing the following steps:
 		```
 
 	``` bash linenums="3"
+	AT%HWVERSION # (1)!
+	```
+
+	1.  This command requests hardware identification.
+		``` { .bash .no-copy linenums="1" title="Terminal" }
+		%HWVERSION: nRF9151 LACA A0A
+		OK
+		```
+
+		Or
+
+		``` { .bash .no-copy linenums="1" title="Terminal" }
+		%HWVERSION: nRF9151 LACA A1A
+		OK
+		```
+
+
+	``` bash linenums="4"
 	AT+CGMR # (1)!
 	```
 
 	1.  This command retrieves the modem firmware revision identification.
 		``` { .bash .no-copy linenums="1" title="Terminal" }
-		mfw_nrf91x1_2.0.2
+		mfw_nrf91x1_2.0.4
 		OK
 		```
 
-	``` bash linenums="4"
+	``` bash linenums="5"
 	AT+CGSN=1 # (1)!
 	```
 
@@ -148,7 +166,7 @@ After programming the sample, test it by performing the following steps:
 		OK
 		```
 
-	``` bash linenums="5"
+	``` bash linenums="6"
 	AT+CFUN? # (1)!
 	```
 
@@ -170,7 +188,7 @@ After programming the sample, test it by performing the following steps:
 		* 31 – GNSS is activated.
 		* 41 – UICC is activated.
 
-	``` bash linenums="6"
+	``` bash linenums="7"
 	AT+CFUN=1 # (1)!
 	```
 
@@ -179,7 +197,7 @@ After programming the sample, test it by performing the following steps:
 		OK
 		```
 
-	``` bash linenums="7"
+	``` bash linenums="8"
 	AT+CIMI # (1)!
 	```
 
@@ -193,7 +211,7 @@ After programming the sample, test it by performing the following steps:
 	You can refer to the [nRF91x1 AT Commands Reference Guide] to test more AT commands.
 
 
-[nRF91x1 AT Commands Reference Guide]: https://docs.nordicsemi.com/bundle/ref_at_commands_nrf91x1/page/REF/at_commands/intro_nrf91x1.html
+[nRF91x1 AT Commands Reference Guide]: https://docs.nordicsemi.com/r/bundle/ref_at_commands_nrf91x1/page/ref/at_commands/intro_nrf91x1.html
 [Getting Started Guide]: ../getting-started.md
 [AT Client]: https://github.com/makerdiary/nrf9151-connectkit/tree/main/samples/at_client
 [Trusted Firmware-M (TF-M)]: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/security/tfm.html#ug-tfm

@@ -70,13 +70,25 @@ Samples showcase a single feature or library, while [Applications] include a var
 	
 	Demonstrate how to use the nRF Cloud device provisioning service.
 
--   __[nRF Cloud REST Device Message](./nrf_cloud_rest_device_message.md)__
+-   __[nRF Cloud CoAP Cellular Location](./nrf_cloud_coap_cell_location.md)__
 	
-	Demonstrate how to use the nRF Cloud REST API to send Device Messages.
+	Demonstrate how to utilize the nRF Cloud’s cellular location service over CoAP.
 
--   __[nRF Cloud Multi-service](./nrf_cloud_multi_service.md)__
+-   __[nRF Cloud CoAP Device Message](./nrf_cloud_coap_device_message.md)__
 	
-	Demonstrate how to integrate multiple nRF Cloud services.
+	Demonstrate how to use the nRF Cloud CoAP API to send device messages.
+
+-   __[nRF Cloud MQTT Cellular Location](./nrf_cloud_mqtt_cell_location.md)__
+	
+	Demonstrate how to utilize the nRF Cloud’s cellular location service over MQTT.
+
+-   __[nRF Cloud MQTT Device Message](./nrf_cloud_mqtt_device_message.md)__
+	
+	Demonstrate how to use the nRF Cloud MQTT API to send device messages.
+
+-   __[System OFF](./system_off.md)__
+	
+	Demonstrate how to put the board in System OFF for low-power measurement.
 
 </div>
 
