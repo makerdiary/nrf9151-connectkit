@@ -2,6 +2,7 @@
 
 > Versatile Prototyping Kit based on the nRF9151 SiP supporting LTE-M/NB-IoT/NTN, DECT NR+ and GNSS
 
+[![](https://img.shields.io/badge/In%20Stock-3ed660)][nrf9151-connectkit]
 [![Current Version](https://img.shields.io/github/tag/makerdiary/nrf9151-connectkit.svg)](https://github.com/makerdiary/nrf9151-connectkit/tags)
 [![Documentation](https://github.com/makerdiary/nrf9151-connectkit/actions/workflows/documentation.yml/badge.svg?branch=main)](https://wiki.makerdiary.com/nrf9151-connectkit)
 [![Twister Apps & Samples](https://github.com/makerdiary/nrf9151-connectkit/actions/workflows/twister-apps-samples.yml/badge.svg?branch=main)](https://wiki.makerdiary.com/nrf9151-connectkit/guides/ncs/)
