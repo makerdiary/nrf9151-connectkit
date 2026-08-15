@@ -28,6 +28,13 @@ LOG_MODULE_REGISTER(main);
 #include "led_state.h"
 #include "msosv2.h"
 
+static void enter_system_off(void)
+{
+	SCB->SCR &= ~SCB_SCR_SEVONPEND_Msk;
+	__DSB();
+	sys_poweroff();
+}
+
 DAP_LINK_CONTEXT_DEFINE(ifmcu_dap_ctx, DEVICE_DT_GET_ONE(zephyr_swdp_gpio));
 
 const struct device *const uart_bridge = DEVICE_DT_GET_ONE(zephyr_uart_bridge);
@@ -50,7 +57,7 @@ static void ifmcu_usbd_msg_cb(struct usbd_context *const ctx, const struct usbd_
 			LOG_ERR("Failed to disable device support");
 		}
 		set_all_leds_off();
-		sys_poweroff();
+		enter_system_off();
 		break;
 
 	case USBD_MSG_RESUME:
@@ -115,11 +122,9 @@ int main(void)
 		return ret;
 	}
 
-	/* No USB cable at boot — go straight to SYSTEM OFF.  Charger and
-	 * settings are already initialised by SYS_INIT before main(). */
 	if (!nrf_power_usbregstatus_vbusdet_get(NRF_POWER)) {
 		set_all_leds_off();
-		sys_poweroff();
+		enter_system_off();
 	}
 
 	ret = usbd_enable(ifmcu_usbd);
