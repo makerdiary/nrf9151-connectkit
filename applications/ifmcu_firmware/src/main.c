@@ -15,6 +15,8 @@
 #include <zephyr/sys/byteorder.h>
 #include <zephyr/usb/bos.h>
 #include <zephyr/usb/msos_desc.h>
+#include <zephyr/sys/poweroff.h>
+#include <hal/nrf_power.h>
 #include <zephyr/dap/dap_link.h>
 
 #include <zephyr/usb/usb_device.h>
@@ -23,7 +25,15 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(main);
 
+#include "led_state.h"
 #include "msosv2.h"
+
+static void enter_system_off(void)
+{
+	SCB->SCR &= ~SCB_SCR_SEVONPEND_Msk;
+	__DSB();
+	sys_poweroff();
+}
 
 DAP_LINK_CONTEXT_DEFINE(ifmcu_dap_ctx, DEVICE_DT_GET_ONE(zephyr_swdp_gpio));
 
@@ -46,6 +56,8 @@ static void ifmcu_usbd_msg_cb(struct usbd_context *const ctx, const struct usbd_
 		if (usbd_disable(ctx)) {
 			LOG_ERR("Failed to disable device support");
 		}
+		set_all_leds_off();
+		enter_system_off();
 		break;
 
 	case USBD_MSG_RESUME:
@@ -108,6 +120,11 @@ int main(void)
 	if (ret) {
 		LOG_ERR("Failed to initialize device support");
 		return ret;
+	}
+
+	if (!nrf_power_usbregstatus_vbusdet_get(NRF_POWER)) {
+		set_all_leds_off();
+		enter_system_off();
 	}
 
 	ret = usbd_enable(ifmcu_usbd);
