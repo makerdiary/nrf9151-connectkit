@@ -9,9 +9,9 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/drivers/charger.h>
-#include <zephyr/sys/poweroff.h>
 #include <zephyr/sys/util.h>
 
+#include "ifmcu_power.h"
 #include "led_state.h"
 #include "bq25180.h"
 
@@ -263,9 +263,8 @@ static void charging_dwork_handler(struct k_work *work)
 	}
 
 	if (val0.online == CHARGER_ONLINE_OFFLINE) {
-		set_all_leds_off();
 		/* Put the chip in SYSTEM OFF mode, to be rebooted when USB is connected. */
-		sys_poweroff();
+		ifmcu_system_off();
 	} else {
 		set_pgood_led_state(LED_STATE_ON);
 		if (val1.status == CHARGER_STATUS_CHARGING) {
