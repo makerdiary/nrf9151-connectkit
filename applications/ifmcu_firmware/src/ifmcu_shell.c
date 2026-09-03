@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <zephyr/shell/shell.h>
 #include <zephyr/sys/reboot.h>
-#include <zephyr/sys/poweroff.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/settings/settings.h>
@@ -19,6 +18,7 @@
 #include <ncs_commit.h>
 
 #include "bq25180.h"
+#include "ifmcu_power.h"
 #include "led_state.h"
 
 #include <zephyr/logging/log.h>
@@ -671,9 +671,8 @@ static int cmd_reset(const struct shell *sh, size_t argc, char **argv)
 
 static int cmd_shutdown(const struct shell *sh, size_t argc, char **argv)
 {
-	set_all_leds_off();
 	/* Put the chip in SYSTEM OFF mode, to be rebooted when USB is connected. */
-	sys_poweroff();
+	ifmcu_system_off();
 
 	return 0;
 }
