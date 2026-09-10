@@ -17,6 +17,7 @@ target_sources(app PRIVATE
   src/main.c
   src/bq25180.c
   src/ifmcu_dap.c
+  src/ifmcu_power.c
   src/ifmcu_shell.c
   src/ifmcu_uart_bridge.c
   src/led_state.c
