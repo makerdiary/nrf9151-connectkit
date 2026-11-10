@@ -1,0 +1,14 @@
+# Copyright 2024 Google LLC
+# Copyright 2016-2026 Makerdiary <https://makerdiary.com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+config BQ2518X
+	bool "BQ2518x Battery Charger"
+	default y
+	depends on DT_HAS_TI_BQ2518X_ENABLED
+    depends on !(DT_HAS_TI_BQ25180_ENABLED || DT_HAS_TI_BQ25186_ENABLED || \
+		DT_HAS_TI_BQ25188_ENABLED)
+	select I2C
+	help
+	  Enable BQ2518x battery charger driver.

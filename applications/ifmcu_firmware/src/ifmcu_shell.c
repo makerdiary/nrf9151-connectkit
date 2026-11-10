@@ -12,12 +12,18 @@
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/settings/settings.h>
 #include <dk_buttons_and_leds.h>
-#include <version.h>
-#include <app_version.h>
+
+#include <zephyr/version.h>
+#include <zephyr_commit.h>
+#include <zephyr/app_version.h>
 #include <ncs_version.h>
 #include <ncs_commit.h>
 
-#include "bq25180.h"
+#if defined(NCS_APPLICATION_BOOT_BANNER_GIT_REPO)
+#include <app_commit.h>
+#endif
+
+#include "bq2518x.h"
 #include "ifmcu_power.h"
 #include "led_state.h"
 
@@ -34,12 +40,15 @@ LOG_MODULE_REGISTER(ifmcu_shell, CONFIG_IFMCU_SHELL_LOG_LEVEL);
 
 #define NRF91_RESET_DURATION 			K_MSEC(100)
 
-#define IFMCU_FW_INFO_STRING	\
-	"v" APP_VERSION_STRING "-g" STRINGIFY(APP_BUILD_VERSION)
+#if defined(NCS_APPLICATION_BOOT_BANNER_GIT_REPO)
+#define IFMCU_FW_INFO_STRING			APP_VERSION_STRING "-" APP_COMMIT_STRING
+#else
+#define IFMCU_FW_INFO_STRING			APP_VERSION_STRING " - unknown commit"
+#endif
 
 #define FULL_FW_INFO_STRING	\
-	"IFMCU Firmware v" APP_VERSION_STRING "-g" STRINGIFY(APP_BUILD_VERSION) "\r\n" \
-	"Zephyr OS " STRINGIFY(BUILD_VERSION) "\r\n" \
+	"IFMCU Firmware v" IFMCU_FW_INFO_STRING "\r\n" \
+	"Zephyr OS v" KERNEL_VERSION_STRING "-" ZEPHYR_COMMIT_STRING "\r\n" \
 	"nRF Connect SDK v" NCS_VERSION_STRING "-" NCS_COMMIT_STRING "\r\n" \
 	"Hardware: " CONFIG_BOARD_TARGET "\r\n" \
 	"Build time: " __DATE__ " " __TIME__ "\r\n"
@@ -77,13 +86,13 @@ const static char * const sysreg_descr[] = {
 
 const static char * const ilim_descr[] = {
 	[0] = "ILIM = 50mA",
-	[1] = "ILIM = 100mA(max.)",
+	[1] = "ILIM = 100mA",
 	[2] = "ILIM = 200mA",
 	[3] = "ILIM = 300mA",
 	[4] = "ILIM = 400mA",
-	[5] = "ILIM = 500mA(max.)",
-	[6] = "ILIM = 700mA",
-	[7] = "ILIM = 1100mA",
+	[5] = "ILIM = 500mA",
+	[6] = "ILIM = 665mA",
+	[7] = "ILIM = 1050mA",
 };
 
 const static char * const status_descr[] = {
@@ -213,13 +222,13 @@ static int settings_set(const char *key, size_t len_rd,
 			rc = read_cb(cb_arg, &chgdis_stored, sizeof(chgdis_stored));
 			if (rc == sizeof(chgdis_stored)) {
 				uint8_t chgdis;
-				ret = bq25180_chgdis_get(&chgdis);
+				ret = bq2518x_chgdis_get(&chgdis);
 				if (ret < 0) {
 					LOG_ERR("Fail to get CHGDIS: (err = %d)", ret);
 					return 0;
 				}
 				if ((chgdis_stored == 0 || chgdis_stored == 1) && chgdis_stored != chgdis) {
-					ret = bq25180_chgdis_set(chgdis_stored);
+					ret = bq2518x_chgdis_set(chgdis_stored);
 					if (ret < 0) {
 						LOG_ERR("Fail to set CHGDIS: (err = %d)", ret);
 						return 0;
@@ -240,13 +249,13 @@ static int settings_set(const char *key, size_t len_rd,
 			rc = read_cb(cb_arg, &sysreg_stored, sizeof(sysreg_stored));
 			if (rc == sizeof(sysreg_stored)) {
 				uint8_t sysreg;
-				ret = bq25180_sysreg_get(&sysreg);
+				ret = bq2518x_sysreg_get(&sysreg);
 				if (ret < 0) {
 					LOG_ERR("Fail to get SYSREG: (err = %d)", ret);
 					return 0;
 				}
 				if (sysreg_stored < 8 && sysreg_stored != sysreg) {
-					ret = bq25180_sysreg_set(sysreg_stored);
+					ret = bq2518x_sysreg_set(sysreg_stored);
 					if (ret < 0) {
 						LOG_ERR("Fail to set SYSREG: (err = %d)", ret);
 						return 0;
@@ -267,13 +276,13 @@ static int settings_set(const char *key, size_t len_rd,
 			rc = read_cb(cb_arg, &ichg_ma_stored, sizeof(ichg_ma_stored));
 			if (rc == sizeof(ichg_ma_stored)) {
 				uint32_t ichg_ma;
-				ret = bq25180_ichg_get(&ichg_ma);
+				ret = bq2518x_ichg_get(&ichg_ma);
 				if (ret < 0) {
 					LOG_ERR("Fail to get ICHG: (err = %d)", ret);
 					return 0;
 				}
 				if (ichg_ma_stored <= 1000 && ichg_ma_stored != ichg_ma) {
-					ret = bq25180_ichg_set(ichg_ma_stored);
+					ret = bq2518x_ichg_set(ichg_ma_stored);
 					if (ret < 0) {
 						LOG_ERR("Fail to set ICHG: (err = %d)", ret);
 						return 0;
@@ -294,13 +303,13 @@ static int settings_set(const char *key, size_t len_rd,
 			rc = read_cb(cb_arg, &vbatreg_mv_stored, sizeof(vbatreg_mv_stored));
 			if (rc == sizeof(vbatreg_mv_stored)) {
 				uint32_t vbatreg_mv;
-				ret = bq25180_vbatreg_get(&vbatreg_mv);
+				ret = bq2518x_vbatreg_get(&vbatreg_mv);
 				if (ret < 0) {
 					LOG_ERR("Fail to get VBATREG: (err = %d)", ret);
 					return 0;
 				}
 				if ((vbatreg_mv_stored >= 3500 && vbatreg_mv_stored <= 4650) && vbatreg_mv_stored != vbatreg_mv) {
-					ret = bq25180_vbatreg_set(vbatreg_mv_stored);
+					ret = bq2518x_vbatreg_set(vbatreg_mv_stored);
 					if (ret < 0) {
 						LOG_ERR("Fail to set VBATREG: (err = %d)", ret);
 						return 0;
@@ -321,13 +330,13 @@ static int settings_set(const char *key, size_t len_rd,
 			rc = read_cb(cb_arg, &ilim_stored, sizeof(ilim_stored));
 			if (rc == sizeof(ilim_stored)) {
 				uint8_t ilim;
-				ret = bq25180_ilim_get(&ilim);
+				ret = bq2518x_ilim_get(&ilim);
 				if (ret < 0) {
 					LOG_ERR("Fail to get ILIM: (err = %d)", ret);
 					return 0;
 				}
 				if (ilim_stored < 8 && ilim_stored != ilim) {
-					ret = bq25180_ilim_set(ilim_stored);
+					ret = bq2518x_ilim_set(ilim_stored);
 					if (ret < 0) {
 						LOG_ERR("Fail to set ILIM: (err = %d)", ret);
 						return 0;
@@ -400,7 +409,7 @@ static int cmd_cfgsync(const struct shell *sh, size_t argc, char **argv)
 	/* Store CHGDIS */
 	char chgdis_key[] =  SETTINGS_KEY "/" CHARGER_CHGDIS_STORAGE_NAME;
 	uint8_t chgdis;
-	ret = bq25180_chgdis_get(&chgdis);
+	ret = bq2518x_chgdis_get(&chgdis);
 	if (ret < 0) {
 		shell_error(sh, "Fail to get CHGDIS: (err = %d)", ret);
 	} else {
@@ -413,7 +422,7 @@ static int cmd_cfgsync(const struct shell *sh, size_t argc, char **argv)
 	/* Store SYSREG */
 	char sysreg_key[] =  SETTINGS_KEY "/" CHARGER_SYSREG_STORAGE_NAME;
 	uint8_t sysreg;
-	ret = bq25180_sysreg_get(&sysreg);
+	ret = bq2518x_sysreg_get(&sysreg);
 	if (ret < 0) {
 		shell_error(sh, "Fail to get SYSREG: (err = %d)", ret);
 	} else {
@@ -426,7 +435,7 @@ static int cmd_cfgsync(const struct shell *sh, size_t argc, char **argv)
 	/* Store ICHG */
 	char ichg_key[] =  SETTINGS_KEY "/" CHARGER_ICHG_STORAGE_NAME;
 	uint32_t ichg_ma;
-	ret = bq25180_ichg_get(&ichg_ma);
+	ret = bq2518x_ichg_get(&ichg_ma);
 	if (ret < 0) {
 		shell_error(sh, "Fail to get ICHG: (err = %d)", ret);
 	} else {
@@ -439,7 +448,7 @@ static int cmd_cfgsync(const struct shell *sh, size_t argc, char **argv)
 	/* Store VBATREG */
 	char vbatreg_key[] =  SETTINGS_KEY "/" CHARGER_VBATREG_STORAGE_NAME;
 	uint32_t vbatreg_mv;
-	ret = bq25180_vbatreg_get(&vbatreg_mv);
+	ret = bq2518x_vbatreg_get(&vbatreg_mv);
 	if (ret < 0) {
 		shell_error(sh, "Fail to get VBATREG: (err = %d)", ret);
 	} else {
@@ -452,7 +461,7 @@ static int cmd_cfgsync(const struct shell *sh, size_t argc, char **argv)
 	/* Store ILIM */
 	char ilim_key[] =  SETTINGS_KEY "/" CHARGER_ILIM_STORAGE_NAME;
 	uint8_t ilim;
-	ret = bq25180_ilim_get(&ilim);
+	ret = bq2518x_ilim_get(&ilim);
 	if (ret < 0) {
 		shell_error(sh, "Fail to get ILIM: (err = %d)", ret);
 	} else {
@@ -473,7 +482,7 @@ static int cmd_charger_chgdis(const struct shell *sh, size_t argc, char **argv)
 	long val;
 
 	if (argc == 1) {
-		ret = bq25180_chgdis_get(&chgdis);
+		ret = bq2518x_chgdis_get(&chgdis);
 		if (ret < 0) {
 			shell_error(sh, "Cannot get CHG_DIS: (err = %d)", ret);
 			return ret;
@@ -491,7 +500,7 @@ static int cmd_charger_chgdis(const struct shell *sh, size_t argc, char **argv)
 		return -EINVAL;
 	}
 
-	ret = bq25180_chgdis_set((uint8_t)val);
+	ret = bq2518x_chgdis_set((uint8_t)val);
 	if (ret < 0) {
 		shell_error(sh, "Cannot enable or disable charging: (err = %d)", ret);
 		return ret;
@@ -508,7 +517,7 @@ static int cmd_charger_sysreg(const struct shell *sh, size_t argc, char **argv)
 	long val;
 
 	if (argc == 1) {
-		ret = bq25180_sysreg_get(&mode);
+		ret = bq2518x_sysreg_get(&mode);
 		if (ret < 0) {
 			shell_error(sh, "Cannot get SYS Voltage: (err = %d)", ret);
 			return ret;
@@ -524,7 +533,7 @@ static int cmd_charger_sysreg(const struct shell *sh, size_t argc, char **argv)
 		return -EINVAL;
 	}
 
-	ret = bq25180_sysreg_set((uint8_t)val);
+	ret = bq2518x_sysreg_set((uint8_t)val);
 	if (ret < 0) {
 		shell_error(sh, "Cannot set SYS Voltage: (err = %d)", ret);
 		return ret;
@@ -541,7 +550,7 @@ static int cmd_charger_ichg(const struct shell *sh, size_t argc, char **argv)
 	long val;
 
 	if (argc == 1) {
-		ret = bq25180_ichg_get(&current_ma);
+		ret = bq2518x_ichg_get(&current_ma);
 		if (ret < 0) {
 			shell_error(sh, "Cannot get Fast Charge Current: (err = %d)", ret);
 			return ret;
@@ -557,7 +566,7 @@ static int cmd_charger_ichg(const struct shell *sh, size_t argc, char **argv)
 		return -EINVAL;
 	}
 
-	ret = bq25180_ichg_set((uint32_t)val);
+	ret = bq2518x_ichg_set((uint32_t)val);
 	if (ret < 0) {
 		shell_error(sh, "Cannot set Fast Charge Current: (err = %d)", ret);
 		return ret;
@@ -574,7 +583,7 @@ static int cmd_charger_vbatreg(const struct shell *sh, size_t argc, char **argv)
 	long val;
 
 	if (argc == 1) {
-		ret = bq25180_vbatreg_get(&voltage_mv);
+		ret = bq2518x_vbatreg_get(&voltage_mv);
 		if (ret < 0) {
 			shell_error(sh, "Cannot get Battery Regulation Voltage (%d)", ret);
 			return ret;
@@ -590,7 +599,7 @@ static int cmd_charger_vbatreg(const struct shell *sh, size_t argc, char **argv)
 		return -EINVAL;
 	}
 
-	ret = bq25180_vbatreg_set((uint32_t)val);
+	ret = bq2518x_vbatreg_set((uint32_t)val);
 	if (ret < 0) {
 		shell_error(sh, "Cannot set Battery Regulation Voltage: (err = %d)", ret);
 		return ret;
@@ -607,7 +616,7 @@ static int cmd_charger_ilim(const struct shell *sh, size_t argc, char **argv)
 	long val;
 
 	if (argc == 1) {
-		ret = bq25180_ilim_get(&level);
+		ret = bq2518x_ilim_get(&level);
 		if (ret < 0) {
 			shell_error(sh, "Cannot get Input Current Limit: (err = %d)", ret);
 			return ret;
@@ -623,7 +632,7 @@ static int cmd_charger_ilim(const struct shell *sh, size_t argc, char **argv)
 		return -EINVAL;
 	}
 
-	ret = bq25180_ilim_set((uint8_t)val);
+	ret = bq2518x_ilim_set((uint8_t)val);
 	if (ret < 0) {
 		shell_error(sh, "Cannot set Input Current Limit: (err = %d)", ret);
 		return ret;
@@ -637,13 +646,41 @@ static int cmd_charger_status(const struct shell *sh, size_t argc, char **argv)
 	int ret;
 	uint8_t status;
 
-	ret = bq25180_status(&status);
+	ret = bq2518x_status(&status);
 	if (ret < 0) {
 		shell_error(sh, "Cannot get Charger Status: (err = %d)", ret);
 		return ret;
 	}
 
 	shell_print(sh, "[%d]: %s", status, status_descr[status]);
+	return 0;
+}
+
+static int cmd_charger_info(const struct shell *sh, size_t argc, char **argv)
+{
+	int ret;
+	uint8_t devid;
+
+	ret = bq2518x_devid(&devid);
+	if (ret < 0) {
+		shell_error(sh, "Cannot get Device ID: (err = %d)", ret);
+		return ret;
+	}
+
+	switch (devid) {
+	case BQ25180_DEVICE_ID:
+		shell_print(sh, "[0x%x] - BQ25180", devid);
+		break;
+	case BQ25186_DEVICE_ID:
+		shell_print(sh, "[0x%x] - BQ25186", devid);
+		break;
+	case BQ25188_DEVICE_ID:
+		shell_print(sh, "[0x%x] - BQ25188", devid);
+		break;
+	default:
+		shell_print(sh, "Unknown Device ID");
+	}
+
 	return 0;
 }
 
@@ -811,15 +848,15 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_charger,
 	SHELL_CMD_ARG(ilim, NULL,
 		"Get or Set Input Current Limit\n"
 		"Usage: charger ilim [level: 0-7]\n"
-		"[level: 0-7] - 50mA|100mA|200mA|300mA|400mA|500mA|700mA|1100mA",
+		"[level: 0-7] - 50mA|100mA|200mA|300mA|400mA|500mA|665mA|1050mA",
 		cmd_charger_ilim, 1, 1),
 	SHELL_CMD_ARG(status, NULL,
 		"Get Charging Status", cmd_charger_status, 1, 0),
+	SHELL_CMD_ARG(info, NULL,
+		"Get Device ID", cmd_charger_info, 1, 0),
 	SHELL_SUBCMD_SET_END /* Array terminated. */
 );
-SHELL_CMD_REGISTER(charger, &sub_charger,
-	"Charger commands\n"
-	"Please refer to TI BQ25180 Datasheet for more details.", NULL);
+SHELL_CMD_REGISTER(charger, &sub_charger, "Charger commands", NULL);
 
 SHELL_CMD_ARG_REGISTER(reset, NULL,
 		   "Reset a target device.\n"
@@ -847,7 +884,7 @@ int ifmcu_shell_init(void)
 
 	settings_init();
 
-	bq25180_init();
+	bq2518x_init();
 
 	return 0;
 }

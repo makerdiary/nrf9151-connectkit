@@ -8,39 +8,45 @@
 
 #include <zephyr/device.h>
 #include <zephyr/drivers/i2c.h>
+#include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/charger.h>
 #include <zephyr/sys/util.h>
 
 #include "ifmcu_power.h"
 #include "led_state.h"
-#include "bq25180.h"
+#include "bq2518x.h"
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(charger, CONFIG_IFMCU_CHARGER_LOG_LEVEL);
 
-#define BQ25180_ICHG_CTRL 0x04
-#define BQ25180_TMR_ILIM  0x08
-#define BQ25180_SYS_REG   0x0A
+#define BQ2518X_ICHG_CTRL 			0x04
+#define BQ2518X_TMR_ILIM  			0x08
+#define BQ2518X_SYS_REG   			0x0A
+#define BQ2518X_MASK_ID   			0x0C
 
-#define BQ25180_ICHG_CHG_DIS 		BIT(7)
-#define BQ25180_SYS_REG_CTRL_MSK    GENMASK(7, 5)
-#define BQ25180_ILIM_MSK			GENMASK(2, 0)
+#define BQ2518X_ICHG_CHG_DIS 		BIT(7)
+#define BQ2518X_SYS_REG_CTRL_MSK    GENMASK(7, 5)
+#define BQ2518X_ILIM_MSK			GENMASK(2, 0)
+#define BQ2518X_DEVICE_ID_MSK       GENMASK(3, 0)
 
-#define CHARGING_CHECK_INTERVAL	K_MSEC(1000)
+#define CHARGING_CHECK_INTERVAL		K_MSEC(1000)
 
 struct charger_config {
 	struct i2c_dt_spec i2c;
+	struct gpio_dt_spec int_gpio;
 	uint32_t initial_current_microamp;
 	uint32_t max_voltage_microvolt;
-	uint32_t recharge_voltage_microvolt;
-	uint32_t precharge_threshold_voltage_microvolt;
+	uint8_t reg_ic_ctrl;
+	uint8_t reg_charge_control1;
+	uint8_t reg_sys_regulation;
+	uint8_t termination_current;
 };
 
 static const struct device *chgdev = DEVICE_DT_GET(DT_NODELABEL(charger));
 
 static struct k_work_delayable charging_dwork;
 
-int bq25180_chgdis_set(uint8_t chgdis)
+int bq2518x_chgdis_set(uint8_t chgdis)
 {
 	int ret;
 
@@ -56,7 +62,7 @@ int bq25180_chgdis_set(uint8_t chgdis)
 	return 0;
 }
 
-int bq25180_chgdis_get(uint8_t *chgdis)
+int bq2518x_chgdis_get(uint8_t *chgdis)
 {
 	const struct charger_config *config = chgdev->config;
 	const struct i2c_dt_spec *i2c = &config->i2c;
@@ -67,17 +73,17 @@ int bq25180_chgdis_get(uint8_t *chgdis)
 		return -ENODEV;
 	}
 
-	ret = i2c_reg_read_byte_dt(i2c, BQ25180_ICHG_CTRL, &ichg_ctrl);
+	ret = i2c_reg_read_byte_dt(i2c, BQ2518X_ICHG_CTRL, &ichg_ctrl);
 	if (ret < 0) {
 		return ret;
 	}
 
-	*chgdis = (ichg_ctrl & BQ25180_ICHG_CHG_DIS)? 1 : 0;
+	*chgdis = (ichg_ctrl & BQ2518X_ICHG_CHG_DIS)? 1 : 0;
 
 	return 0;
 }
 
-int bq25180_sysreg_set(uint8_t mode)
+int bq2518x_sysreg_set(uint8_t mode)
 {
 	const struct charger_config *config = chgdev->config;
 	const struct i2c_dt_spec *i2c = &config->i2c;
@@ -87,9 +93,9 @@ int bq25180_sysreg_set(uint8_t mode)
 		return -ENODEV;
 	}
 
-	mode = FIELD_PREP(BQ25180_SYS_REG_CTRL_MSK, mode);
+	mode = FIELD_PREP(BQ2518X_SYS_REG_CTRL_MSK, mode);
 
-	ret = i2c_reg_update_byte_dt(i2c, BQ25180_SYS_REG, BQ25180_SYS_REG_CTRL_MSK, mode);
+	ret = i2c_reg_update_byte_dt(i2c, BQ2518X_SYS_REG, BQ2518X_SYS_REG_CTRL_MSK, mode);
 	if (ret < 0) {
 		return ret;
 	}
@@ -97,7 +103,7 @@ int bq25180_sysreg_set(uint8_t mode)
 	return 0;
 }
 
-int bq25180_sysreg_get(uint8_t *mode)
+int bq2518x_sysreg_get(uint8_t *mode)
 {
 	const struct charger_config *config = chgdev->config;
 	const struct i2c_dt_spec *i2c = &config->i2c;
@@ -108,17 +114,17 @@ int bq25180_sysreg_get(uint8_t *mode)
 		return -ENODEV;
 	}
 
-	ret = i2c_reg_read_byte_dt(i2c, BQ25180_SYS_REG, &sysreg_ctrl);
+	ret = i2c_reg_read_byte_dt(i2c, BQ2518X_SYS_REG, &sysreg_ctrl);
 	if (ret < 0) {
 		return ret;
 	}
 
-	*mode = FIELD_GET(BQ25180_SYS_REG_CTRL_MSK, sysreg_ctrl);
+	*mode = FIELD_GET(BQ2518X_SYS_REG_CTRL_MSK, sysreg_ctrl);
 
 	return 0;
 }
 
-int bq25180_ichg_set(uint32_t current_ma)
+int bq2518x_ichg_set(uint32_t current_ma)
 {
 	int ret;
 	union charger_propval val;
@@ -134,7 +140,7 @@ int bq25180_ichg_set(uint32_t current_ma)
 	return ret;
 }
 
-int bq25180_ichg_get(uint32_t *current_ma)
+int bq2518x_ichg_get(uint32_t *current_ma)
 {
 	int ret;
 	union charger_propval val;
@@ -153,7 +159,7 @@ int bq25180_ichg_get(uint32_t *current_ma)
 	return 0;
 }
 
-int bq25180_vbatreg_set(uint32_t voltage_mv)
+int bq2518x_vbatreg_set(uint32_t voltage_mv)
 {
 	int ret;
 	union charger_propval val;
@@ -169,7 +175,7 @@ int bq25180_vbatreg_set(uint32_t voltage_mv)
 	return ret;
 }
 
-int bq25180_vbatreg_get(uint32_t *voltage_mv)
+int bq2518x_vbatreg_get(uint32_t *voltage_mv)
 {
 	int ret;
 	union charger_propval val;
@@ -188,7 +194,7 @@ int bq25180_vbatreg_get(uint32_t *voltage_mv)
 	return 0;
 }
 
-int bq25180_ilim_set(uint8_t level)
+int bq2518x_ilim_set(uint8_t level)
 {
 	const struct charger_config *config = chgdev->config;
 	const struct i2c_dt_spec *i2c = &config->i2c;
@@ -198,9 +204,9 @@ int bq25180_ilim_set(uint8_t level)
 		return -ENODEV;
 	}
 
-	level = FIELD_PREP(BQ25180_ILIM_MSK, level);
+	level = FIELD_PREP(BQ2518X_ILIM_MSK, level);
 
-	ret = i2c_reg_update_byte_dt(i2c, BQ25180_TMR_ILIM, BQ25180_ILIM_MSK, level);
+	ret = i2c_reg_update_byte_dt(i2c, BQ2518X_TMR_ILIM, BQ2518X_ILIM_MSK, level);
 	if (ret < 0) {
 		return ret;
 	}
@@ -208,7 +214,7 @@ int bq25180_ilim_set(uint8_t level)
 	return 0;
 }
 
-int bq25180_ilim_get(uint8_t *level)
+int bq2518x_ilim_get(uint8_t *level)
 {
 	const struct charger_config *config = chgdev->config;
 	const struct i2c_dt_spec *i2c = &config->i2c;
@@ -219,17 +225,17 @@ int bq25180_ilim_get(uint8_t *level)
 		return -ENODEV;
 	}
 
-	ret = i2c_reg_read_byte_dt(i2c, BQ25180_TMR_ILIM, &ilim);
+	ret = i2c_reg_read_byte_dt(i2c, BQ2518X_TMR_ILIM, &ilim);
 	if (ret < 0) {
 		return ret;
 	}
 
-	*level = FIELD_GET(BQ25180_ILIM_MSK, ilim);
+	*level = FIELD_GET(BQ2518X_ILIM_MSK, ilim);
 
 	return 0;
 }
 
-int bq25180_status(uint8_t *status)
+int bq2518x_status(uint8_t *status)
 {
 	int ret;
 	union charger_propval val;
@@ -242,7 +248,33 @@ int bq25180_status(uint8_t *status)
 	*status = val.status;
 
 	return 0;
+}
 
+int bq2518x_devid(uint8_t *devid)
+{
+
+	const struct charger_config *config = chgdev->config;
+	const struct i2c_dt_spec *i2c = &config->i2c;
+	uint8_t val;
+	int ret;
+
+	if (!device_is_ready(chgdev)) {
+		return -ENODEV;
+	}
+
+	ret = i2c_reg_read_byte_dt(i2c, BQ2518X_MASK_ID, &val);
+	if (ret < 0) {
+		return ret;
+	}
+
+	val &= BQ2518X_DEVICE_ID_MSK;
+	if (!((val == BQ25180_DEVICE_ID) || (val == BQ25186_DEVICE_ID) || (val == BQ25188_DEVICE_ID))) {
+		return -EINVAL;
+	}
+
+	*devid = val;
+
+	return 0;
 }
 
 static void charging_dwork_handler(struct k_work *work)
@@ -283,7 +315,7 @@ out:
 }
 
 
-int bq25180_init(void)
+int bq2518x_init(void)
 {
 	if (!device_is_ready(chgdev)) {
 		LOG_ERR("Charger device is not ready");

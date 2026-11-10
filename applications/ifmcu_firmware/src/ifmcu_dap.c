@@ -9,7 +9,12 @@
 #include <zephyr/drivers/usb/udc.h>
 #include <zephyr/sys/byteorder.h>
 #include <zephyr/dap/dap_link.h>
-#include <app_version.h>
+#include <zephyr/app_version.h>
+
+#if defined(NCS_APPLICATION_BOOT_BANNER_GIT_REPO)
+#include <app_commit.h>
+#endif
+
 #include <cmsis_dap.h>
 
 #include "led_state.h"
@@ -128,7 +133,12 @@ static size_t dap_execute_vendor_cmd(struct dap_link_context *const dap_link_ctx
 		const size_t VERSION_STRING_LEN = 62U;
 
 		int len = snprintf(out + 2, VERSION_STRING_LEN,
-			"Boot: %u.%u.%u, App: " APP_VERSION_STRING "-g" STRINGIFY(APP_BUILD_VERSION),
+			"Boot: %u.%u.%u, App: "
+	        APP_VERSION_STRING
+#if defined(NCS_APPLICATION_BOOT_BANNER_GIT_REPO)
+	        "-" APP_COMMIT_STRING
+#endif
+			,
 			((NRF_TIMER2->CC[0] >> 16) & 0xFF),
 			((NRF_TIMER2->CC[0] >> 8) & 0xFF),
 			(NRF_TIMER2->CC[0] & 0xFF));

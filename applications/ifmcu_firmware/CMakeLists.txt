@@ -15,7 +15,7 @@ include(${ZEPHYR_BASE}/samples/subsys/usb/common/common.cmake)
 # NORDIC SDK APP START
 target_sources(app PRIVATE 
   src/main.c
-  src/bq25180.c
+  src/bq2518x.c
   src/ifmcu_dap.c
   src/ifmcu_power.c
   src/ifmcu_shell.c

@@ -117,12 +117,11 @@
 	pinctrl-1 = <&i2c0_sleep>;
 	pinctrl-names = "default", "sleep";
 
-	charger: bq25180@6a {
-		compatible = "ti,bq25180";
+	charger: bq2518x@6a {
+		compatible = "ti,bq2518x";
 		reg = <0x6a>;
 		constant-charge-current-max-microamp = <100000>;
 		constant-charge-voltage-max-microvolt = <4200000>;
-		re-charge-voltage-microvolt = <4000000>;
 	};
 };
 
@@ -178,4 +177,9 @@ zephyr_udc0: &usbd {
 	cdc_acm_uart1: cdc_acm_uart1 {
 		compatible = "zephyr,cdc-acm-uart";
 	};
+};
+
+&lfclk {
+	k32src = "rc";
+	k32src-accuracy-ppm = <250>;
 };
