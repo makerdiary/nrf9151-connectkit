@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019 Nordic Semiconductor ASA
- # Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
+ * Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
@@ -27,6 +27,20 @@
 #include <zephyr/net/coap_client.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/logging/log_ctrl.h>
+#include <zephyr/net/tls_credentials.h>
+
+/* CONFIG_COAP_SAMPLE_DTLS_SEC_TAG and CONFIG_COAP_SAMPLE_DTLS_HANDSHAKE_TIMEOUT_MAX_MS
+ * are defined in Kconfig under "if COAP_SAMPLE_DTLS", so they don't exist at all when
+ * CONFIG_COAP_SAMPLE_DTLS is disabled. Provide fallback values so the code referencing
+ * them below compiles unconditionally; the IS_ENABLED(CONFIG_COAP_SAMPLE_DTLS) runtime
+ * check ensures they are never actually used in that case.
+ */
+#ifndef CONFIG_COAP_SAMPLE_DTLS_SEC_TAG
+#define CONFIG_COAP_SAMPLE_DTLS_SEC_TAG 0
+#endif
+#ifndef CONFIG_COAP_SAMPLE_DTLS_HANDSHAKE_TIMEOUT_MAX_MS
+#define CONFIG_COAP_SAMPLE_DTLS_HANDSHAKE_TIMEOUT_MAX_MS 0
+#endif
 
 LOG_MODULE_REGISTER(coap_client_sample, CONFIG_COAP_CLIENT_SAMPLE_LOG_LEVEL);
 
@@ -53,15 +67,42 @@ static bool is_connected;
 K_MUTEX_DEFINE(network_connected_lock);
 K_CONDVAR_DEFINE(network_connected);
 
+static void server_addr_set_ipv4(struct sockaddr_storage *server, struct addrinfo *result)
+{
+	struct sockaddr_in *server4 = (struct sockaddr_in *)server;
+	char addr_str[NET_IPV6_ADDR_LEN];
+
+	server4->sin_addr.s_addr = ((struct sockaddr_in *)result->ai_addr)->sin_addr.s_addr;
+	server4->sin_family = AF_INET;
+	server4->sin_port = htons(CONFIG_COAP_SAMPLE_SERVER_PORT);
+
+	inet_ntop(AF_INET, &server4->sin_addr.s_addr, addr_str, sizeof(addr_str));
+	LOG_INF("IPv4 Address found %s", addr_str);
+}
+
+static void server_addr_set_ipv6(struct sockaddr_storage *server, struct addrinfo *result)
+{
+	struct sockaddr_in6 *server6 = (struct sockaddr_in6 *)server;
+	char addr_str[NET_IPV6_ADDR_LEN];
+
+	memcpy(&server6->sin6_addr,
+	       &((struct sockaddr_in6 *)result->ai_addr)->sin6_addr,
+	       sizeof(server6->sin6_addr));
+	server6->sin6_family = AF_INET6;
+	server6->sin6_port = htons(CONFIG_COAP_SAMPLE_SERVER_PORT);
+
+	inet_ntop(AF_INET6, &server6->sin6_addr, addr_str, sizeof(addr_str));
+	LOG_INF("IPv6 Address found %s", addr_str);
+}
+
 static int server_resolve(struct sockaddr_storage *server)
 {
 	int err;
 	struct addrinfo *result;
 	struct addrinfo hints = {
-		.ai_family = AF_INET,
+		.ai_family = AF_UNSPEC,
 		.ai_socktype = SOCK_DGRAM
 	};
-	char ipv4_addr[NET_IPV4_ADDR_LEN];
 
 	err = getaddrinfo(CONFIG_COAP_SAMPLE_SERVER_HOSTNAME, NULL, &hints, &result);
 	if (err) {
@@ -74,16 +115,22 @@ static int server_resolve(struct sockaddr_storage *server)
 		return -ENOENT;
 	}
 
-	/* IPv4 Address. */
-	struct sockaddr_in *server4 = ((struct sockaddr_in *)server);
-
-	server4->sin_addr.s_addr = ((struct sockaddr_in *)result->ai_addr)->sin_addr.s_addr;
-	server4->sin_family = AF_INET;
-	server4->sin_port = htons(CONFIG_COAP_SAMPLE_SERVER_PORT);
-
-	inet_ntop(AF_INET, &server4->sin_addr.s_addr, ipv4_addr, sizeof(ipv4_addr));
-
-	LOG_INF("IPv4 Address found %s", ipv4_addr);
+	/* Resolve either IPv4 or IPv6 */
+	switch (result->ai_family) {
+	case AF_INET:
+		server_addr_set_ipv4(server, result);
+		break;
+	case AF_INET6:
+		if (IS_ENABLED(CONFIG_NET_IPV6)) {
+			server_addr_set_ipv6(server, result);
+			break;
+		}
+		__fallthrough;
+	default:
+		LOG_ERR("Unexpected address family: %d", result->ai_family);
+		freeaddrinfo(result);
+		return -EAFNOSUPPORT;
+	}
 
 	/* Free the address. */
 	freeaddrinfo(result);
@@ -113,9 +160,164 @@ static void response_cb(const struct coap_client_response_data *data, void *user
 	}
 }
 
-static int periodic_coap_request_loop(void)
+static int credentials_add(void)
+{
+	int err;
+
+	if (IS_ENABLED(CONFIG_COAP_SAMPLE_DTLS)) {
+		static const char ca_cert[] = {
+#if defined(CONFIG_COAP_SAMPLE_DTLS)
+			#include "coap_sample_ca_cert.inc"
+			'\0'
+#endif
+		};
+		static const char client_cert[] = {
+#if defined(CONFIG_COAP_SAMPLE_DTLS)
+			#include "coap_sample_client_cert.inc"
+			'\0'
+#endif
+		};
+		static const char client_key[] = {
+#if defined(CONFIG_COAP_SAMPLE_DTLS)
+			#include "coap_sample_client_key.inc"
+			'\0'
+#endif
+		};
+
+		err = tls_credential_add(CONFIG_COAP_SAMPLE_DTLS_SEC_TAG,
+					 TLS_CREDENTIAL_CA_CERTIFICATE,
+					 ca_cert, sizeof(ca_cert));
+		if ((err < 0) && (err != -EEXIST)) {
+			LOG_ERR("Failed to register CA certificate: %d", err);
+			FATAL_ERROR();
+			return err;
+		}
+
+		err = tls_credential_add(CONFIG_COAP_SAMPLE_DTLS_SEC_TAG,
+					 TLS_CREDENTIAL_PUBLIC_CERTIFICATE,
+					 client_cert, sizeof(client_cert));
+		if ((err < 0) && (err != -EEXIST)) {
+			LOG_ERR("Failed to register client certificate: %d", err);
+			FATAL_ERROR();
+			return err;
+		}
+
+		err = tls_credential_add(CONFIG_COAP_SAMPLE_DTLS_SEC_TAG,
+					 TLS_CREDENTIAL_PRIVATE_KEY,
+					 client_key, sizeof(client_key));
+		if ((err < 0) && (err != -EEXIST)) {
+			LOG_ERR("Failed to register private key: %d", err);
+			FATAL_ERROR();
+			return err;
+		}
+	}
+
+	return 0;
+}
+
+/* Resolves the server and opens a socket to it, performing the DTLS handshake if enabled.
+ * Returns the socket on success, or a negative error code on a recoverable failure.
+ */
+static int server_connect(struct sockaddr_storage *server)
 {
 	int err, sock;
+
+	err = server_resolve(server);
+	if (err) {
+		LOG_ERR("Failed to resolve server name");
+		return err;
+	}
+
+	sock = socket(server->ss_family, SOCK_DGRAM,
+		      IS_ENABLED(CONFIG_COAP_SAMPLE_DTLS) ? IPPROTO_DTLS_1_2 : IPPROTO_UDP);
+	if (sock < 0) {
+		LOG_ERR("Failed to create CoAP socket: %d.", -errno);
+		FATAL_ERROR();
+		return -errno;
+	}
+
+	if (IS_ENABLED(CONFIG_COAP_SAMPLE_DTLS)) {
+		sec_tag_t sec_tag_list[] = { CONFIG_COAP_SAMPLE_DTLS_SEC_TAG };
+
+		err = setsockopt(sock, SOL_TLS, TLS_SEC_TAG_LIST,
+				 sec_tag_list, sizeof(sec_tag_list));
+		if (err < 0) {
+			LOG_ERR("Failed to set TLS_SEC_TAG_LIST: %d", -errno);
+			(void)zsock_close(sock);
+			FATAL_ERROR();
+			return -errno;
+		}
+
+		uint32_t handshake_timeout_ms = CONFIG_COAP_SAMPLE_DTLS_HANDSHAKE_TIMEOUT_MAX_MS;
+
+		err = setsockopt(sock, SOL_TLS, TLS_DTLS_HANDSHAKE_TIMEOUT_MAX,
+				 &handshake_timeout_ms, sizeof(handshake_timeout_ms));
+		if (err < 0) {
+			LOG_ERR("Failed to set TLS_DTLS_HANDSHAKE_TIMEOUT_MAX: %d", -errno);
+			(void)zsock_close(sock);
+			FATAL_ERROR();
+			return -errno;
+		}
+
+		/* Set the expected server hostname for SNI and server certificate
+		 * CN/SAN verification.
+		 */
+		err = setsockopt(sock, SOL_TLS, TLS_HOSTNAME,
+				 CONFIG_COAP_SAMPLE_SERVER_HOSTNAME,
+				 sizeof(CONFIG_COAP_SAMPLE_SERVER_HOSTNAME) - 1);
+		if (err < 0) {
+			LOG_ERR("Failed to set TLS_HOSTNAME: %d", -errno);
+			(void)zsock_close(sock);
+			FATAL_ERROR();
+			return -errno;
+		}
+
+		/* Explicitly connect to trigger the DTLS handshake now so we can log
+		 * the outcome and negotiated ciphersuite before handing the socket to
+		 * the CoAP client.
+		 */
+		LOG_INF("Performing DTLS handshake with %s:%d (mutual TLS)...",
+			CONFIG_COAP_SAMPLE_SERVER_HOSTNAME,
+			CONFIG_COAP_SAMPLE_SERVER_PORT);
+
+		err = zsock_connect(sock, (struct sockaddr *)server,
+				    server->ss_family == AF_INET6 ?
+					    sizeof(struct sockaddr_in6) :
+					    sizeof(struct sockaddr_in));
+		if (err < 0) {
+			err = -errno;
+			LOG_ERR("DTLS handshake failed: %d", err);
+			(void)zsock_close(sock);
+			return err;
+		}
+
+		int cipher_id;
+		socklen_t cipher_id_len = sizeof(cipher_id);
+
+		err = getsockopt(sock, SOL_TLS, TLS_CIPHERSUITE_USED, &cipher_id, &cipher_id_len);
+		if (err == 0) {
+			LOG_INF("DTLS handshake complete, ciphersuite: 0x%04x", cipher_id);
+		} else {
+			LOG_INF("DTLS handshake complete (ciphersuite unknown, getsockopt err %d)",
+				-errno);
+		}
+	}
+
+	return sock;
+}
+
+static void server_disconnect(struct coap_client *coap_client, int *sock)
+{
+	coap_client_cancel_requests(coap_client);
+	(void)zsock_close(*sock);
+	*sock = -1;
+}
+
+/* Only returns on fatal errors. Recoverable errors close the socket and reconnect. */
+static int periodic_coap_request_loop(void)
+{
+	int err;
+	int sock = -1;
 	int consecutive_busy_retries = 0;
 	struct sockaddr_storage server = { 0 };
 	struct coap_client coap_client = { 0 };
@@ -129,53 +331,53 @@ static int periodic_coap_request_loop(void)
 		.path = CONFIG_COAP_SAMPLE_RESOURCE,
 	};
 
-	err = server_resolve(&server);
+	err = credentials_add();
 	if (err) {
-		LOG_ERR("Failed to resolve server name");
 		return err;
 	}
-
-	sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (sock < 0) {
-		LOG_ERR("Failed to create CoAP socket: %d.", -errno);
-		return -errno;
-	}
-
-	LOG_INF("Initializing CoAP client");
 
 	err = coap_client_init(&coap_client, NULL);
 	if (err) {
 		LOG_ERR("Failed to initialize CoAP client: %d", err);
+		FATAL_ERROR();
 		return err;
 	}
 
 	while (true) {
 		wait_for_network();
 
-		/* Send request */
-		err = coap_client_req(&coap_client, sock, (struct sockaddr *)&server, &req, NULL);
-		if (err) {
-			if (err == -EAGAIN) {
-				consecutive_busy_retries++;
-				if (consecutive_busy_retries >= MAX_CONSECUTIVE_BUSY_RETRIES) {
-					LOG_ERR("CoAP client busy after %d consecutive retries",
-						consecutive_busy_retries);
-					return err;
-				}
-
-				LOG_WRN("CoAP client busy, retrying later");
-				k_sleep(K_SECONDS(CONFIG_COAP_SAMPLE_REQUEST_INTERVAL_SECONDS));
+		if (sock < 0) {
+			sock = server_connect(&server);
+			if (sock < 0) {
+				LOG_WRN("Failed to connect to server: %d, retrying in %d seconds",
+					sock, CONFIG_SAMPLE_RECONNECT_DELAY_SECONDS);
+				k_sleep(K_SECONDS(CONFIG_SAMPLE_RECONNECT_DELAY_SECONDS));
 				continue;
 			}
+		}
 
-			LOG_ERR("Failed to send request: %d", err);
-			return err;
+		/* Send request */
+		err = coap_client_req(&coap_client, sock, (struct sockaddr *)&server, &req, NULL);
+		if (err == -EAGAIN &&
+		    ++consecutive_busy_retries < MAX_CONSECUTIVE_BUSY_RETRIES) {
+			LOG_WRN("CoAP client busy, retrying later");
+			k_sleep(K_SECONDS(CONFIG_COAP_SAMPLE_REQUEST_INTERVAL_SECONDS));
+			continue;
 		}
 
 		consecutive_busy_retries = 0;
 
-		LOG_INF("CoAP GET request sent sent to %s, resource: %s",
-			CONFIG_COAP_SAMPLE_SERVER_HOSTNAME, CONFIG_COAP_SAMPLE_RESOURCE);
+		if (err) {
+			LOG_ERR("Failed to send request: %d, reconnecting", err);
+			server_disconnect(&coap_client, &sock);
+			k_sleep(K_SECONDS(CONFIG_SAMPLE_RECONNECT_DELAY_SECONDS));
+			continue;
+		}
+
+		LOG_INF("CoAP GET request sent to %s:%d, resource: %s",
+			CONFIG_COAP_SAMPLE_SERVER_HOSTNAME,
+			CONFIG_COAP_SAMPLE_SERVER_PORT,
+			CONFIG_COAP_SAMPLE_RESOURCE);
 
 		k_sleep(K_SECONDS(CONFIG_COAP_SAMPLE_REQUEST_INTERVAL_SECONDS));
 	}
@@ -262,9 +464,11 @@ int main(void)
 	err = periodic_coap_request_loop();
 	if (err) {
 		LOG_ERR("periodic_coap_request_loop, error: %d", err);
-		FATAL_ERROR();
-		return err;
 	}
 
-	return 0;
+	LOG_INF("Bringing network interfaces down");
+	(void)conn_mgr_all_if_disconnect(true);
+	(void)conn_mgr_all_if_down(true);
+
+	return err;
 }

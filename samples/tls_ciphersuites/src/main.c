@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2022 Nordic Semiconductor ASA
- * Copyright (c) 2016-2026, Makerdiary
+ * Copyright (c) 2016-2026 Makerdiary <https://makerdiary.com>
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
@@ -35,7 +35,6 @@ struct lookup_ciphersuite {
  * https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
  */
 static struct lookup_ciphersuite ciphersuites[] = {
-	{ "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256", 0xC02B },
 	{ "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384", 0xC024 },
 	{ "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA", 0xC00A },
 	{ "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256", 0xC023 },

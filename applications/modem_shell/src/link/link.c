@@ -436,7 +436,6 @@ void link_ind_handler(const struct lte_lc_evt *const evt)
 		if (evt->nw_reg_status == LTE_LC_NW_REG_REGISTERED_HOME ||
 		    evt->nw_reg_status == LTE_LC_NW_REG_REGISTERED_ROAMING) {
 			k_work_submit_to_queue(&mosh_common_work_q, &registered_work);
-		} else {
 		}
 		break;
 	case LTE_LC_EVT_CELL_UPDATE:
