@@ -119,13 +119,12 @@ After programming the sample, test it by performing the following steps:
 3. Once the device is provisioned and connected, you should see the output, similar to what is shown in the following:
 
 	``` { .txt .no-copy linenums="1" title="Terminal" }
-    [INF] All pins have been configured as non-secure
-    [NOT] Booting TF-M v2.3.0**
-    [NOT] Built Thu 18 Jun 2026 09:01:20 UTC
+    [NOT] Booting TF-M v2.3.1**
+    [NOT] Built Mon 09 Nov 2026 15:29:14 UTC
     [INF] Float ABI: Hard, Lazy stacking enabled
-    *** Booting My Application v1.0.0-e67dc29a98a4 ***
-    *** Using nRF Connect SDK v3.3.99-95ed8f7e7406 ***
-    *** Using Zephyr OS v4.4.0-14033cef1f73 ***
+    *** Booting My Application v1.0.0-4698a5f54481 ***
+    *** Using nRF Connect SDK v3.4.99-87282dad802b ***
+    *** Using Zephyr OS v4.4.99-9c580a288753 ***
     [00:00:00.259,460] <inf> nrf_cloud_mqtt_device_message: nRF Cloud MQTT Device Message Sample, version: 1.0.0
     [00:00:00.259,460] <inf> nrf_cloud_mqtt_device_message: Reset reason: 0x1
     [00:00:00.791,229] <inf> nrf_cloud_credentials: Sec Tag: 16842753; CA: Yes, Client Cert: Yes, Private Key: Yes
@@ -182,7 +181,7 @@ After programming the sample, test it by performing the following steps:
     ![](../../../assets/images/nrf_cloud_mqtt_device_message.png)
 
 
-[nRF Cloud]: https://nrfcloud.com/
+[nRF Cloud]: https://app.nrfcloud.com/
 [nRF Cloud MQTT API]: https://docs.nrfcloud.com/docs/nrfcloud/mqtt-overview
 [device message]: https://docs.nrfcloud.com/docs/nrfcloud/device-messages
 [nRF Cloud Device Provisioning]: ./nrf_provisioning.md

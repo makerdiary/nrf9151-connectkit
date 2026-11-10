@@ -121,13 +121,12 @@ After programming the sample, test it by performing the following steps:
 3. Once the device is provisioned and connected, you should see the output, similar to what is shown in the following:
 
 	``` { .txt .no-copy linenums="1" title="Terminal" }
-    [INF] All pins have been configured as non-secure
-    [NOT] Booting TF-M v2.3.0**
-    [NOT] Built Thu 18 Jun 2026 08:52:11 UTC
+    [NOT] Booting TF-M v2.3.1**
+    [NOT] Built Mon 09 Nov 2026 15:17:53 UTC
     [INF] Float ABI: Hard, Lazy stacking enabled
-    *** Booting My Application v1.0.0-e67dc29a98a4 ***
-    *** Using nRF Connect SDK v3.3.99-95ed8f7e7406 ***
-    *** Using Zephyr OS v4.4.0-14033cef1f73 ***
+    *** Booting My Application v1.0.0-4698a5f54481 ***
+    *** Using nRF Connect SDK v3.4.99-87282dad802b ***
+    *** Using Zephyr OS v4.4.99-9c580a288753 ***
     [00:00:00.259,429] <inf> nrf_cloud_mqtt_cell_location_sample: nRF Cloud MQTT Cellular Location Sample, version: 1.0.0
     [00:00:00.536,468] <inf> nrf_cloud_mqtt_cell_location_sample: Connecting to LTE...
     +CGEV: EXCE STATUS 0
@@ -169,7 +168,7 @@ After programming the sample, test it by performing the following steps:
     ![](../../../assets/images/nrf_cloud_mqtt_cell_location.png)
 
 
-[nRF Cloud]: https://nrfcloud.com/
+[nRF Cloud]: https://app.nrfcloud.com/
 [nRF Cloud MQTT API]: https://docs.nrfcloud.com/docs/nrfcloud/mqtt-overview
 [Location]: https://nrfconnectdocs.nordicsemi.com/ncs/latest/nrf/libraries/modem/location.html#lib-location
 [nRF Cloud Location Services documentation]: https://docs.nrfcloud.com/docs/platform/location-services

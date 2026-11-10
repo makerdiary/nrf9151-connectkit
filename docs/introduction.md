@@ -1,8 +1,5 @@
 # nRF9151 Connect Kit<br/><small>Versatile Prototyping Kit based on the nRF9151 SiP supporting LTE-M/NB-IoT/NTN, DECT NR+ and GNSS</small>
 
-!!! Tip "Product Update Notification"
-    From June 18, 2026, all nRF9151 Connect Kits will ship with the nRF9151 SiP revision __A1__ (upgraded from __A0__ by Nordic Semiconductor), adding support for Non-Terrestrial Networks (NTN). See [Migrating from A0 to A1 Revision](./blog/posts/migrating-from-a0-to-a1-revision/index.md) for details. 
-
 ## Introduction
 
 nRF9151 Connect Kit is a versatile prototyping kit built around the [nRF9151] System-in-Package
@@ -16,7 +13,7 @@ as well as modem firmware update, no need for any external tools. The Interface 
 USB-UART bridge for log, trace and terminal emulation, and an Interface Shell bundled with helpful
 commands to access the board-specific functionality.
 
-The board contains a [BQ25180] I2C programmable battery charger with power path management
+The board contains a [BQ25188] I2C programmable battery charger with power path management
 and ultra low quiescent current, and a [TPS63901] buck-boost converter with 75-nA quiescent
 current and 1.8V/3.3V configurable power supply for I/Os.
 
@@ -56,7 +53,7 @@ and can be leveraged and modified to suit your specific needs.
 	- Self-upgradable UF2 Bootloader featuring drag-and-drop programming for Interface MCU firmware update
 	- Open source and more features will be released gradually over time
 
-* BQ25180 I2C programmable Battery Charger with power path management and ultra low quiescent current 
+* BQ25188 I2C programmable Battery Charger with power path management and ultra low quiescent current 
 * TPS63901 buck-boost converter with 75-nA quiescent current and 1.8V/3.3V configurable power supply for I/Os
 * On-board GNSS Low Noise Amplifier (LNA) with 18.2 dB gain and only 0.7 dB noise figure for improved sensitivity
 * Shipped with U.FL cabled LTE-M/NB-IoT/NR+ and GNSS antennas
@@ -85,7 +82,7 @@ and can be leveraged and modified to suit your specific needs.
 
 [nRF9151]: https://www.nordicsemi.com/Products/nRF9151
 [nRF52820]: https://www.nordicsemi.com/Products/nrf52820
-[BQ25180]: https://www.ti.com/product/BQ25180
+[BQ25188]: https://www.ti.com/product/BQ25188
 [TPS63901]: https://www.ti.com/product/TPS63901
 [nRF Connect SDK]: https://github.com/nrfconnect/sdk-nrf
 [Zephyr RTOS]: https://github.com/zephyrproject-rtos/zephyr

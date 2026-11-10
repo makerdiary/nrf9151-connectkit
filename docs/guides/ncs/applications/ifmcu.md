@@ -193,21 +193,21 @@ ifsh:~$
   version     viosel
 ifsh:~$ charger --help
 charger - Charger commands
-          Please refer to TI BQ25180 Datasheet for more details.
 Subcommands:
-  chgdis  : Charge Disable
+  chgdis   : Charge Disable
              Usage: charger chgdis [value: 0|1]
-  sysreg  : Get or Set SYS Voltage
+  sysreg   : Get or Set SYS Voltage
              Usage: charger sysreg [mode: 0-7]
              [mode: 0-7] - VBAT+225mV(>=3.8V)|4.4V|4.5V|4.6V|4.7V|4.8V|4.9V|VBUS
-  ichg  : Get or Set Fast Charge Current (0-1000mA)
+  ichg     : Get or Set Fast Charge Current (0-1000mA)
              Usage: charger ichg [current_ma: 0-1000]
   vbatreg  : Get or Set Battery Regulation Voltage (3500-4650mV)
              Usage: charger vbatreg [voltage_mv: 3500-4650]
-  ilim  : Get or Set Input Current Limit
+  ilim     : Get or Set Input Current Limit
              Usage: charger ilim [level: 0-7]
-             [level: 0-7] - 50mA|100mA|200mA|300mA|400mA|500mA|700mA|1100mA
-  status  : Get Charging Status
+             [level: 0-7] - 50mA|100mA|200mA|300mA|400mA|500mA|665mA|1050mA
+  status   : Get Charging Status
+  info     : Get Device ID
 ```
 
 ## Interface Shell Command Reference
@@ -222,8 +222,9 @@ The following table describes all supported commands of the Interface Shell:
 | __`charger sysreg [0-7]`__ | Get or Set SYS Voltage <br/> `0`: VBAT + 225 mV (3.8 V minimum) <br/> `1`: 4.4V <br/> `2` (default): 4.5V <br/> `3`: 4.6V <br/> `4`: 4.7V <br/> `5`: 4.8V <br/> `6`: 4.9V <br/> `7`: VBUS |
 | __`charger ichg [0-1000]`__ | Get or Set Fast Charge Current (0-1000mA). Default 100mA. |
 | __`charger vbatreg [3500-4650]`__ | Get or Set Battery Regulation Voltage (3500-4650mV). Default 4200mV. |
-| __`charger ilim [0-7]`__ | Get or Set Input Current Limit <br/> `0`: 50mA <br/> `1`: 100mA <br/> `2`: 200mA <br/> `3`: 300mA <br/> `4`: 400mA <br/> `5` (default): 500mA <br/> `6`: 700mA <br/> `7`: 1100mA |
+| __`charger ilim [0-7]`__ | Get or Set Input Current Limit <br/> `0`: 50mA <br/> `1`: 100mA <br/> `2`: 200mA <br/> `3`: 300mA <br/> `4`: 400mA <br/> `5` (default): 500mA <br/> `6`: 665mA <br/> `7`: 1050mA |
 | __`charger status`__ | Get Charging Status. |
+| __`charger info`__ | Get Device ID. |
 | __`clear`__ | Clear shell screen. |
 | __`device list`__ | List all configured devices in the devicetree. |
 | __`help`__ | Show help information. |

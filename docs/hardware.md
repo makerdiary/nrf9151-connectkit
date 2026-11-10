@@ -20,7 +20,7 @@ nRF9151 Connect Kit is a 4-layer chem. Gold, 55.88mm x 20.32mm (2.2" x 0.8") 1mm
 
 ## Power supply
 
-nRF9151 Connect Kit can be powered through the USB-C port, a Li-Ion/LiPo/LiFePO4 battery, or by an external power source. The board contains a [BQ25180] I2C programmable battery charger with power path management and ultra low
+nRF9151 Connect Kit can be powered through the USB-C port, a Li-Ion/LiPo/LiFePO4 battery, or by an external power source. The board contains a [BQ25188] I2C programmable battery charger with power path management and ultra low
 quiescent current, and a [TPS63901] buck-boost converter with 75-nA quiescent current and 1.8V/3.3V configurable power supply for I/Os.
 
 The following figure describes the power supply architecture:
@@ -45,8 +45,8 @@ The following table describes the pin functions of the Interface MCU:
 |----------|-------------|
 | P0.0     | GPIO pin used for SWCLK output. Connect to the SWCLK pin of nRF9151 SiP. |
 | P0.1     | GPIO pin used for SWDIO input/output. Connect to the SWDIO pin of nRF9151 SiP. |
-| P0.2     | SDA pin of the I2C bus. Connect to the SDA pin of BQ25180 through a 10-kΩ pullup resistor. |
-| P0.3     | SCL pin of the I2C bus. Connect to the SCL pin of BQ25180 through a 10-kΩ pullup resistor. |
+| P0.2     | SDA pin of the I2C bus. Connect to the SDA pin of BQ25188 through a 10-kΩ pullup resistor. |
+| P0.3     | SCL pin of the I2C bus. Connect to the SCL pin of BQ25188 through a 10-kΩ pullup resistor. |
 | P0.4/RX  | RXD pin of the UART bridge. Connect to the P0.11 pin of nRF9151 SiP. |
 | P0.5/TX  | TXD pin of the UART bridge. Connect to the P0.12 pin of nRF9151 SiP. |
 | P0.7     | GPIO pin used for RESET output. Connect to the RESET pin of nRF9151 SiP. |
@@ -54,9 +54,9 @@ The following table describes the pin functions of the Interface MCU:
 | P0.14    | GPIO pin used to control the Blue LED of RGB LED driven by a MOS switch. A high level applied to this pin turns on the LED and a low level turns it off. |
 | P0.15    | GPIO pin used to control the Green LED of RGB LED driven by a MOS switch. A high level applied to this pin turns on the LED and a low level turns it off. |
 | P0.16    | GPIO pin used to control the Green LED driven by a MOS switch. A high level applied to this pin turns on the LED and a low level turns it off. |
-| P0.17    | GPIO pin used to control the TS/MR pin of BQ25180. TS/MR is driven by a MOS switch and pulls to GND when A high level applied to this pin. |
+| P0.17    | GPIO pin used to control the TS/MR pin of BQ25188. TS/MR is driven by a MOS switch and pulls to GND when A high level applied to this pin. |
 | P0.20    | GPIO pin used to control the Red LED of RGB LED driven by a MOS switch. A high level applied to this pin turns on the LED and a low level turns it off. |
-| P0.28    | GPIO pin connected to the /INT pin of BQ25180. When a fault occurs, a 128-μs active low pulse is sent out to this pin as an interrupt. |
+| P0.28    | GPIO pin connected to the /INT pin of BQ25188. When a fault occurs, a 128-μs active low pulse is sent out to this pin as an interrupt. |
 | P0.29    | GPIO pin used to detect the nano-SIM card inserting. This pin pulls to GND when no card is inserted. |
 | P0.30    | GPIO pin used to detect button press of the DFU/RST button. This pin pulls to GND when the button is pressed. |
 
@@ -176,6 +176,6 @@ The following table describes the pin functions of the additional pins:
 
 [HW Diagram PDF]: ./assets/attachments/nrf9151-connectkit-hardware-diagram_reva.pdf
 [Board DXF Files]: ./assets/attachments/nrf9151-connectkit-board-dxf_reva.zip
-[BQ25180]: https://www.ti.com/product/BQ25180
+[BQ25188]: https://www.ti.com/product/BQ25188
 [TPS63901]: https://www.ti.com/product/TPS63901
 [TPS7A02228]: https://www.ti.com/product/TPS7A02

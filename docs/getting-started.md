@@ -56,18 +56,17 @@ Open up a serial terminal, specifying the Modem Shell COM port:
 Press the __DFU/RST__ button to reset the nRF9151 SiP. Observe the output of the terminal. You should see the output, similar to what is shown in the following:
 
 ``` { .txt .no-copy linenums="1" title="Terminal" }
-[INF] All pins have been configured as non-secure
-[NOT] Booting TF-M v2.3.0**
-[NOT] Built Thu 18 Jun 2026 05:05:45 UTC
+[NOT] Booting TF-M v2.3.1**
+[NOT] Built Tue 10 Nov 2026 03:35:01 UTC
 [VER] Isolation level is: 1
 [INF] Float ABI: Hard, Lazy stacking enabled
-*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
-*** Using Zephyr OS v4.4.0-14033cef1f73 ***
+*** Booting nRF Connect SDK v3.4.99-87282dad802b ***
+*** Using Zephyr OS v4.4.99-9c580a288753 ***
 
 Reset reason: PIN reset
 
 mosh:~$
-MOSH version:       v3.3.99-95ed8f7e7406
+MOSH version:       v3.4.99-87282dad802b
 MOSH build id:      custom
 MOSH build variant: dev
 HW version:         nRF9151 LACA A0A

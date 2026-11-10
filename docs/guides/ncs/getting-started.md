@@ -584,8 +584,8 @@ Open up a serial terminal, specifying the correct serial port that your computer
 Observe the output of the terminal. You should see the output, similar to what is shown in the following:
 
 ``` { .txt .no-copy linenums="1" title="Terminal" }
-*** Booting nRF Connect SDK v2.9.99-98a5e50b9ac1 ***
-*** Using Zephyr OS v3.7.99-693769a5c735 ***
+*** Booting nRF Connect SDK v3.4.99-87282dad802b ***
+*** Using Zephyr OS v4.4.99-9c580a288753 ***
 [0] Hello World! nrf9151_connectkit/nrf9151
 [1] Hello World! nrf9151_connectkit/nrf9151
 [2] Hello World! nrf9151_connectkit/nrf9151

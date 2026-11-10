@@ -100,11 +100,10 @@ After programming the sample, test it by performing the following steps:
 3. Observe the output of the terminal. You should see the output, similar to what is shown in the following:
 
 	``` { .txt .no-copy linenums="1" title="Terminal" }
-	[INF] All pins have been configured as non-secure
-	[NOT] Booting TF-M v2.3.0**
-	[NOT] Built Thu 18 Jun 2026 06:58:03 UTC
-	*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
-	*** Using Zephyr OS v4.4.0-14033cef1f73 ***
+	[NOT] Booting TF-M v2.3.1**
+	[NOT] Built Fri 06 Nov 2026 12:32:11 UTC
+	*** Booting nRF Connect SDK v3.4.99-87282dad802b ***
+	*** Using Zephyr OS v4.4.99-9c580a288753 ***
 	HTTPS client sample started
 	Bringing network interface up
 	Provisioning certificate

@@ -122,13 +122,12 @@ After programming the sample, test it by performing the following steps:
 3. Wait for the LTE link to be established. You should see the output, similar to what is shown in the following:
 
 	``` { .txt .no-copy linenums="1" title="Terminal" }
-	[INF] All pins have been configured as non-secure
-	[NOT] Booting TF-M v2.3.0**
-	[NOT] Built Thu 18 Jun 2026 07:37:29 UTC
+	[NOT] Booting TF-M v2.3.1**
+	[NOT] Built Mon 09 Nov 2026 14:23:48 UTC
 	[INF] Float ABI: Hard, Lazy stacking enabled
 
-	*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
-	*** Using Zephyr OS v4.4.0-14033cef1f73 ***
+	*** Booting nRF Connect SDK v3.4.99-87282dad802b ***
+	*** Using Zephyr OS v4.4.99-9c580a288753 ***
 	[00:00:00.261,352] <inf> nrf_provisioning_sample: nRF Device Provisioning Sample
 	[00:00:00.261,383] <inf> nrf_provisioning_sample: Bringing network interface up and connecting to the network
 	[00:00:00.263,214] <inf> nrf_provisioning_sample: Provisioning scheduled, next attempt in 3 seconds
@@ -223,7 +222,7 @@ After programming the sample, test it by performing the following steps:
 	![](../../../assets/images/nrf_cloud_device_provisioned.png)
 
 [nRF Cloud device provisioning service]: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/networking/nrf_provisioning.html#lib-nrf-provisioning
-[nRF Cloud]: https://nrfcloud.com/
+[nRF Cloud]: https://app.nrfcloud.com/
 [Getting Started Guide]: ../getting-started.md
 [nRF Cloud Device Provisioning]: https://github.com/makerdiary/nrf9151-connectkit/tree/main/samples/nrf_device_provisioning
 [Trusted Firmware-M (TF-M)]: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/security/tfm.html#ug-tfm

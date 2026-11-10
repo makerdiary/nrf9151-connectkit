@@ -2,14 +2,12 @@
 
 > Versatile Prototyping Kit based on the nRF9151 SiP supporting LTE-M/NB-IoT/NTN, DECT NR+ and GNSS
 
-[![](https://img.shields.io/badge/In%20Stock-3ed660)][nrf9151-connectkit]
+[![](https://img.shields.io/badge/In%20Stock-brightgreen)][nrf9151-connectkit]
 [![Current Version](https://img.shields.io/github/tag/makerdiary/nrf9151-connectkit.svg)](https://github.com/makerdiary/nrf9151-connectkit/tags)
 [![Documentation](https://github.com/makerdiary/nrf9151-connectkit/actions/workflows/documentation.yml/badge.svg?branch=main)](https://wiki.makerdiary.com/nrf9151-connectkit)
 [![Twister Apps & Samples](https://github.com/makerdiary/nrf9151-connectkit/actions/workflows/twister-apps-samples.yml/badge.svg?branch=main)](https://wiki.makerdiary.com/nrf9151-connectkit/guides/ncs/)
 [![PRs Welcome](https://img.shields.io/badge/Contributing-appreciated-brightgreen.svg?color=informational)](https://wiki.makerdiary.com/nrf9151-connectkit/contributing/)
-
-> [!NOTE]
-> From June 18, 2026, all nRF9151 Connect Kits will ship with the nRF9151 SiP revision __A1__ (upgraded from __A0__ by Nordic Semiconductor), adding support for Non-Terrestrial Networks (NTN). See [Migrating from A0 to A1 Revision][migrating-a0-to-a1] for details.
+[![Revision history](https://img.shields.io/badge/Revision%20history-brightgreen)](https://wiki.makerdiary.com/nrf9151-connectkit/revision-history)
 
 ## Introduction
 
@@ -17,7 +15,7 @@
 
 The design comes with an Interface MCU built using the [nRF52820][nrf52820], which enables debug, programming as well as modem firmware update, no need for any external tools. The Interface MCU also includes a USB-UART bridge for log, trace and terminal emulation, and an Interface Shell bundled with helpful commands to access the board-specific functionality.
 
-The board contains a [BQ25180][bq25180] I2C programmable battery charger with power path management and ultra low quiescent current, and a [TPS63901][tps63901] buck-boost converter with 75-nA quiescent current and 1.8V/3.3V configurable power supply for I/Os.
+The board contains a [BQ25188][bq25188] I2C programmable battery charger with power path management and ultra low quiescent current, and a [TPS63901][tps63901] buck-boost converter with 75-nA quiescent current and 1.8V/3.3V configurable power supply for I/Os.
 
 It also has USB-C, LEDs, Buttons, nano-SIM card slot, Battery connector, U.FL receptacles for U.FL cabled LTE-M/NB-IoT/NR+ and GNSS antennas, Arm Serial Wire Debug (SWD) port and dual-row 40 pins with loose or pre-soldered headers available.
 
@@ -51,7 +49,7 @@ It also has USB-C, LEDs, Buttons, nano-SIM card slot, Battery connector, U.FL re
 	- Self-upgradable UF2 Bootloader featuring drag-and-drop programming for Interface MCU firmware update
 	- Open source and more features will be released gradually over time
 
-* BQ25180 I2C programmable Battery Charger with power path management and ultra low quiescent current 
+* BQ25188 I2C programmable Battery Charger with power path management and ultra low quiescent current 
 * TPS63901 buck-boost converter with 75-nA quiescent current and 1.8V/3.3V configurable power supply for I/Os
 * On-board GNSS Low Noise Amplifier (LNA) with 18.2 dB gain and only 0.7 dB noise figure for improved sensitivity
 * Shipped with U.FL cabled LTE-M/NB-IoT/NR+ and GNSS antennas
@@ -116,7 +114,7 @@ This project may include some imported or reused components that are licensed un
 [nrf9151-connectkit]: https://makerdiary.com/products/nrf9151-connectkit
 [nrf9151]: https://www.nordicsemi.com/Products/nRF9151
 [nrf52820]: https://www.nordicsemi.com/Products/nrf52820
-[bq25180]: https://www.ti.com/product/BQ25180
+[bq25188]: https://www.ti.com/product/BQ25188
 [tps63901]: https://www.ti.com/product/TPS63901
 [ncs]: https://github.com/nrfconnect/sdk-nrf
 [zephyr]: https://github.com/zephyrproject-rtos/zephyr

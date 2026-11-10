@@ -74,7 +74,7 @@ Use the following steps to build the [ADC] sample on the command line.
 		west build -p always -b nrf9151_connectkit/nrf9151/ns samples/adc
 		```
 
-4. After building the sample successfully, the firmware with the name `merged.hex` can be found in the `build` directory.
+4. After building the sample successfully, the firmware with the name `zephyr.hex` can be found in the `build/adc/zephyr/` directory.
 
 ## Flashing the firmware
 
@@ -92,7 +92,7 @@ west flash
 	In case you wonder, the `west flash` will execute the following command:
 
 	``` bash
-	pyocd load --target nrf91 --frequency 4000000 build/merged.hex
+	pyocd load --target nrf91 --frequency 4000000 build/adc/zephyr/zephyr.hex
 	```
 
 ## Testing
@@ -129,8 +129,8 @@ After programming the sample, test it by performing the following steps:
 3. Observe the output of the terminal. You should see the output, similar to what is shown in the following:
 
 	``` { .txt .no-copy linenums="1" title="Terminal" }
-	*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
-	*** Using Zephyr OS v4.4.0-14033cef1f73 ***
+	*** Booting nRF Connect SDK v3.4.99-87282dad802b ***
+	*** Using Zephyr OS v4.4.99-9c580a288753 ***
 	ADC reading[0]:
 	- adc@e000, channel 0: 2379 = 522 mV
 	- adc@e000, channel 1: 15070 = 3311 mV

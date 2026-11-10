@@ -116,7 +116,7 @@ theme:
         - icon: material/cable-data
           title: Flexible Power Management
           description: >-
-            Built using BQ25180 I2C programmable battery charger with power path management and ultra low quiescent current,
+            Built using BQ25188 I2C programmable battery charger with power path management and ultra low quiescent current,
             and TPS63901 buck-boost converter with 75-nA quiescent current and 1.8V/3.3V configurable power supply for I/Os.
 
         - icon: material/link-box-variant

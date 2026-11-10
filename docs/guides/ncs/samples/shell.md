@@ -39,7 +39,7 @@ Use the following steps to build the [Shell] sample on the command line.
 		west build -p always -b nrf9151_connectkit/nrf9151/ns samples/shell
 		```
 
-4. After building the sample successfully, the firmware with the name `merged.hex` can be found in the `build` directory.
+4. After building the sample successfully, the firmware with the name `zephyr.hex` can be found in the `build/shell/zephyr/` directory.
 
 ## Flashing the firmware
 
@@ -57,7 +57,7 @@ west flash
 	In case you wonder, the `west flash` will execute the following command:
 
 	``` bash
-	pyocd load --target nrf91 --frequency 4000000 build/merged.hex
+	pyocd load --target nrf91 --frequency 4000000 build/shell/zephyr/zephyr.hex
 	```
 
 ## Testing
@@ -94,8 +94,8 @@ After programming the sample, test it by performing the following steps:
 3. Once the sample starts running, you should see the following output:
 
 	``` { .bash .no-copy linenums="1" title="Terminal" }
-	*** Booting nRF Connect SDK v3.3.99-95ed8f7e7406 ***
-	*** Using Zephyr OS v4.4.0-14033cef1f73 ***
+	*** Booting nRF Connect SDK v3.4.99-87282dad802b ***
+	*** Using Zephyr OS v4.4.99-9c580a288753 ***
 	uart:~$
 	```
 
@@ -103,7 +103,7 @@ After programming the sample, test it by performing the following steps:
 
 	``` { .txt .no-copy linenums="3" title="Terminal"}
 	uart:~$ version
-	Zephyr version 4.4.0
+	Zephyr version 4.4.99
 	```
 
 [Getting Started Guide]: ../getting-started.md

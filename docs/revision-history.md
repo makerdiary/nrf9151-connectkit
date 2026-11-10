@@ -2,6 +2,11 @@
 
 ## Hardware
 
+### Rev.A2 <small>Nov 10, 2026</small> { id="REVA2" }
+
+- Updated to BQ25188 with better performance and material availability.
+- No changes to PCB.
+
 ### Rev.A1 <small>June 18, 2026</small> { id="REVA1" }
 
 - Updated to nRF9151 A1 Module with NTN Support.
@@ -12,6 +17,14 @@
 - The first public release.
 
 ## Software & Documentation
+
+### V3.0.0 <small>Nov 10, 2026</small> { id="DOC_V3.0.0" }
+
+- Uses NCS `v3.4.99-87282dad802b`.
+- Updated Interface MCU firmware for BQ25180 and BQ25188 compatibility.
+- Ensure the nRF52820 always enters shutdown when USB-C is disconnected by [@m4rkw](https://github.com/m4rkw) in [#20](https://github.com/makerdiary/nrf9151-connectkit/pull/20)
+- Updated applications and samples to align with NCS `v3.4.99-87282dad802b`.
+- Updated documentation accordingly.
 
 ### V2.0.0 <small>June 18, 2026</small> { id="DOC_V2.0.0" }
 
